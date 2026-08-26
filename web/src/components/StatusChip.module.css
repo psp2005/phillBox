@@ -1,0 +1,23 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+  /* 색은 인라인 style 로 주입한다 (상태마다 다르므로) */
+  border: 1px solid currentColor;
+  background: transparent;
+  white-space: nowrap;
+}
+
+.icon {
+  font-size: 12px;
+}
+
+.time {
+  font-weight: 400;
+  opacity: 0.85;
+}

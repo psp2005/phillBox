@@ -1,0 +1,96 @@
+.navRight {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--adm-color-primary);
+}
+
+.navLeft {
+  font-size: 15px;
+  color: var(--adm-color-weak);
+}
+
+.list {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* 기기 배너 하나. button 으로 만들어야 키보드로도 선택된다. */
+.card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  border: 1px solid var(--adm-color-border);
+  border-radius: 12px;
+  background: var(--page-bg);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.card:active {
+  background: var(--adm-color-fill-content);
+}
+
+.cardMain {
+  flex: 1;
+  min-width: 0;
+}
+
+.nickname {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--adm-color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.serial {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--adm-color-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.statusRow {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.statusLabel {
+  font-size: 13px;
+  color: var(--adm-color-weak);
+}
+
+.chevron {
+  flex-shrink: 0;
+  font-size: 22px;
+  color: var(--adm-color-light);
+}
+
+/* --- 비어있음 / 로딩 / 오류 상태 (spec §6.2) --- */
+
+.stateBox {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.emptyActions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}
+
+.skeletonCard {
+  padding: 16px;
+  border: 1px solid var(--adm-color-border);
+  border-radius: 12px;
+  background: var(--page-bg);
+}

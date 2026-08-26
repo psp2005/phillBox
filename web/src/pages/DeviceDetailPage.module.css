@@ -1,0 +1,142 @@
+.page {
+  min-height: 100vh;
+  background: var(--app-bg);
+  padding-bottom: 24px;
+}
+
+.card {
+  margin: 12px;
+  padding: 16px;
+  border-radius: 12px;
+  background: var(--page-bg);
+  border: 1px solid var(--adm-color-border);
+}
+
+.cardHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--adm-color-text);
+}
+
+.cardRange {
+  font-size: 13px;
+  color: var(--adm-color-light);
+  font-variant-numeric: tabular-nums;
+}
+
+/* --- 주간 현황 7칸 --- */
+
+.week {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 0;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.cell:active {
+  background: var(--adm-color-fill-content);
+}
+
+/* 오늘 칸은 옅은 배경으로 구분 */
+.today {
+  background: var(--adm-color-primary-light, #e8f3ff);
+}
+
+.weekday {
+  font-size: 12px;
+  color: var(--adm-color-weak);
+}
+
+.today .weekday {
+  color: var(--adm-color-primary);
+  font-weight: 700;
+}
+
+.day {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--adm-color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 상태 표시 동그라미. 색은 인라인 style, 아이콘은 항상 같이 나온다 (spec §6.4) */
+.mark {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: 1.5px solid currentColor;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* 복약 요일이 아닌 칸 (복약 건 자체가 없음) */
+.blank {
+  border-style: dashed;
+  color: var(--adm-color-border);
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--adm-color-border);
+  font-size: 12px;
+  color: var(--adm-color-weak);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* --- 아래쪽 버튼들 --- */
+
+.actions {
+  margin: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.callLink {
+  display: block;
+  text-decoration: none;
+}
+
+.stateBox {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.stateActions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+}

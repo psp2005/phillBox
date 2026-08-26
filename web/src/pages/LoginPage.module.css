@@ -1,0 +1,80 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 0 24px;
+}
+
+.brand {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.logo {
+  font-size: 48px;
+  line-height: 1;
+}
+
+.title {
+  margin: 12px 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--adm-color-text);
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  color: var(--adm-color-weak);
+}
+
+/* 폼을 카드가 아니라 화면에 그대로 붙이므로 위아래 경계선을 지운다 */
+.form {
+  --border-top: none;
+  --border-bottom: none;
+}
+
+.error {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--adm-color-danger);
+  background: var(--adm-color-danger-light, #ffeceb);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* spec §10 — 소셜 로그인이 나중에 들어올 자리. 지금은 비워 둔다. */
+.socialSlot {
+  margin-top: 28px;
+  text-align: center;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--adm-color-light);
+  font-size: 13px;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--adm-color-border);
+}
+
+.socialHint {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: var(--adm-color-light);
+}

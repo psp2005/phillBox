@@ -1,0 +1,56 @@
+.page {
+  min-height: 100vh;
+  background: var(--app-bg);
+}
+
+.deviceName {
+  padding: 14px 16px 0;
+  font-size: 13px;
+  color: var(--adm-color-weak);
+}
+
+.error {
+  margin: 12px 12px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--adm-color-danger);
+  background: #ffeceb;
+}
+
+/* Picker 는 값을 눌러서 여는 방식이라, 입력칸처럼 보이게 만든다 */
+.pickerValue {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--adm-color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.pickerPlaceholder {
+  font-size: 16px;
+  color: var(--adm-color-light);
+  font-weight: 400;
+}
+
+/* 요일 알약 7개가 한 줄에 들어가도록 */
+.daySelector {
+  --border-radius: 999px;
+  --padding: 8px 0;
+}
+
+.helpText {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--adm-color-weak);
+  line-height: 1.6;
+}
+
+.footerNote {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: var(--adm-color-fill-content);
+  font-size: 13px;
+  color: var(--adm-color-weak);
+  line-height: 1.6;
+}

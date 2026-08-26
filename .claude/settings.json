@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const p=require\\('/c/Dev/pillbox/web/node_modules/antd-mobile/package.json'\\); console.log\\(p.version, p.main, p.module\\)\")",
+      "Bash(rm -f src/App.css src/assets/react.svg src/assets/vite.svg src/assets/hero.png public/icons.svg)",
+      "Bash(rmdir src/assets)",
+      "Bash(npm run *)"
+    ]
+  }
+}

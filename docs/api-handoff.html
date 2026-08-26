@@ -1,0 +1,1425 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>복약기 — 화면별 API 명세서</title>
+<style>
+  @page { size: A4 landscape; margin: 10mm 12mm; }
+
+  :root {
+    --primary: #1677ff;
+    --success: #00b578;
+    --danger:  #ff3141;
+    --warning: #ff8f1f;
+    --text:    #333;
+    --weak:    #666;
+    --light:   #999;
+    --border:  #eee;
+    --line:    #ddd;
+    --bg:      #f5f5f5;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Malgun Gothic', -apple-system, sans-serif;
+    font-size: 8pt;
+    line-height: 1.42;
+    color: var(--text);
+    background: #fff;
+  }
+
+  code, pre { font-family: Consolas, 'D2Coding', monospace; }
+
+  /* ---------- 페이지 ---------- */
+  .page {
+    page-break-after: always;
+    page-break-inside: avoid;
+    height: 178mm;
+    overflow: hidden;
+  }
+  .page:last-child { page-break-after: auto; }
+
+  .page-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    border-bottom: 2px solid var(--text);
+    padding-bottom: 4px;
+    margin-bottom: 7px;
+  }
+  .page-no {
+    font-size: 8pt;
+    color: #fff;
+    background: var(--text);
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-weight: 700;
+  }
+  .page-title { font-size: 14pt; font-weight: 700; margin: 0; }
+  .page-sub { font-size: 9pt; color: var(--weak); margin-left: auto; }
+
+  /* ---------- 2단 레이아웃 ---------- */
+  .cols { display: flex; gap: 12px; align-items: flex-start; }
+  .col-screen { flex: 0 0 68mm; }
+  .col-api { flex: 1; min-width: 0; }
+
+  /* ---------- 폰 목업 ---------- */
+  .phone {
+    width: 66mm;
+    border: 1.5px solid #bbb;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #fff;
+    font-size: 8pt;
+  }
+  .navbar {
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+    height: 24px; border-bottom: 1px solid var(--border);
+    font-weight: 700; font-size: 8.5pt;
+  }
+  .navbar .l, .navbar .r {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    font-size: 7.5pt; font-weight: 400;
+  }
+  .navbar .l { left: 6px; color: var(--weak); }
+  .navbar .r { right: 6px; color: var(--primary); font-weight: 600; }
+  .screen-body { padding: 6px; background: var(--bg); min-height: 96mm; }
+  .tabbar {
+    display: flex; border-top: 1px solid var(--border);
+    background: #fff;
+  }
+  .tabbar div {
+    flex: 1; text-align: center; padding: 4px 0;
+    font-size: 7pt; color: var(--light);
+  }
+  .tabbar div.on { color: var(--primary); font-weight: 700; }
+  .badge {
+    display: inline-block; background: var(--danger); color: #fff;
+    border-radius: 8px; padding: 0 4px; font-size: 6pt; margin-left: 2px;
+  }
+
+  .card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: 6px; padding: 7px; margin-bottom: 6px;
+  }
+  .nick { font-weight: 700; font-size: 8.5pt; }
+  .serial { color: var(--light); font-size: 7pt; }
+  .chip {
+    display: inline-block; border: 1px solid currentColor;
+    border-radius: 10px; padding: 0 5px; font-size: 7pt; font-weight: 600;
+  }
+  .c-ok { color: var(--success); }
+  .c-bad { color: var(--danger); }
+  .c-warn { color: var(--warning); }
+  .c-mute { color: var(--light); }
+
+  .week { display: grid; grid-template-columns: repeat(7,1fr); text-align: center; gap: 1px; }
+  .week .wd { font-size: 6.5pt; color: var(--weak); }
+  .week .dy { font-size: 7pt; font-weight: 700; }
+  .week .mk {
+    width: 15px; height: 15px; margin: 2px auto 0;
+    border: 1px solid currentColor; border-radius: 50%;
+    font-size: 7pt; line-height: 13px;
+  }
+  .today-cell { background: #e8f3ff; border-radius: 4px; }
+  .legend { font-size: 6pt; color: var(--weak); border-top: 1px solid var(--border); margin-top: 5px; padding-top: 4px; }
+
+  .btn {
+    text-align: center; border-radius: 5px; padding: 5px;
+    font-size: 8pt; margin-bottom: 5px; font-weight: 600;
+  }
+  .btn-o { border: 1px solid var(--primary); color: var(--primary); }
+  .btn-g { border: 1px solid var(--line); color: var(--text); }
+  .btn-s { background: var(--success); color: #fff; }
+  .btn-p { background: var(--primary); color: #fff; }
+
+  .field { background:#fff; border-bottom: 1px solid var(--border); padding: 5px 6px; }
+  .field .lb { font-size: 6.5pt; color: var(--weak); }
+  .field .vl { font-size: 8pt; }
+
+  .row-item {
+    background: #fff; border-bottom: 1px solid var(--border);
+    padding: 5px 6px; display: flex; justify-content: space-between; align-items: center;
+  }
+  .row-unread { background: #f5f9ff; }
+  .dot { width: 5px; height: 5px; border-radius: 50%; background: var(--danger); flex: 0 0 5px; margin-right: 4px; }
+  .dot-off { background: transparent; }
+
+  .popup {
+    background: #fff; border-radius: 8px; padding: 9px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.15); margin: 25mm 4mm;
+  }
+  .popup h4 { text-align: center; margin: 0 0 7px; font-size: 9pt; }
+  .popup .pr { display: flex; justify-content: space-between; font-size: 7.5pt; padding: 2px 0; }
+
+  /* ---------- API 명세 ---------- */
+  .ep {
+    background: #f7f9fc; border-left: 3px solid var(--primary);
+    padding: 5px 8px; margin-bottom: 7px; border-radius: 0 4px 4px 0;
+  }
+  .ep .m {
+    display: inline-block; background: var(--primary); color: #fff;
+    font-size: 7.5pt; font-weight: 700; padding: 1px 6px; border-radius: 3px;
+    margin-right: 5px; font-family: Consolas, monospace;
+  }
+  .ep .m.post { background: #00a870; }
+  .ep .m.put  { background: #e37318; }
+  .ep .u { font-family: Consolas, monospace; font-size: 9pt; font-weight: 700; }
+  .ep .when { font-size: 7.5pt; color: var(--weak); display: block; margin-top: 2px; }
+
+  h5 { font-size: 7.8pt; margin: 5px 0 2px; color: var(--weak); }
+  h5::before { content: '▸ '; color: var(--primary); }
+
+  pre {
+    background: #fbfbfd; border: 1px solid var(--border);
+    border-radius: 4px; padding: 4px 6px; margin: 0 0 4px;
+    font-size: 6.6pt; line-height: 1.36; white-space: pre-wrap;
+    word-break: break-all;
+  }
+  .cm { color: #22863a; }
+  .ky { color: #0550ae; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 6.8pt; margin-bottom: 4px; }
+  th, td { border: 1px solid var(--line); padding: 1.5px 4px; text-align: left; vertical-align: top; }
+  th { background: #f2f4f7; font-weight: 700; }
+  td code, th code { font-size: 6.8pt; }
+
+  .note {
+    background: #fffbe6; border-left: 3px solid #f0c000;
+    padding: 4px 6px; font-size: 6.8pt; margin-bottom: 4px; border-radius: 0 4px 4px 0;
+    line-height: 1.4;
+  }
+  .note b { color: #a06a00; }
+  .warn { background: #fff1f0; border-left-color: var(--danger); }
+  .warn b { color: #b41d1d; }
+
+  ul { margin: 0 0 4px; padding-left: 13px; font-size: 7pt; line-height: 1.4; }
+  li { margin-bottom: 1px; }
+
+  /* ---------- 표지 ---------- */
+  .cover { padding-top: 25mm; }
+  .cover h1 { font-size: 26pt; margin: 0 0 6px; }
+  .cover .st { font-size: 12pt; color: var(--weak); margin-bottom: 20px; }
+  .cover table { width: 70%; font-size: 9pt; }
+  .toc { column-count: 2; column-gap: 20px; font-size: 9pt; margin-top: 12px; }
+</style>
+</head>
+<body>
+
+<!-- ============ 표지 ============ -->
+<div class="page cover">
+  <h1>복약기 — 화면별 API 명세서</h1>
+  <div class="st">노인 복약 관리 시스템 · MVP</div>
+
+  <table>
+    <tr><th style="width:28%">작성</th><td>2026-08-24</td></tr>
+    <tr><th>기준 문서</th><td><code>spec.md</code> §8 (최종 계약서) · <code>api-decisions.md</code></td></tr>
+    <tr><th>결정 이유</th><td><code>api-worksheet.md</code></td></tr>
+    <tr><th>구성</th><td>보호자 앱용 8개 + 디바이스용 2개 = <b>엔드포인트 10개</b></td></tr>
+    <tr><th>공통 객체</th><td>Device · Dose · Medication · Notification</td></tr>
+  </table>
+
+  <h5 style="margin-top:18px">목차</h5>
+  <div class="toc">
+    01 공통 규칙<br>
+    02 공통 객체 4개<br>
+    03 화면 1 — 로그인 / 회원가입<br>
+    04 화면 2 — 기기 목록<br>
+    05 화면 3 — 기기 등록<br>
+    06 화면 4 — 기기 상세 (이번 주)<br>
+    07 화면 5 — 약 설정<br>
+    08 화면 6 — 복약 기록<br>
+    09 화면 7 — 알림 목록<br>
+    10 공용 팝업 — 복약 상세<br>
+    11 디바이스용 API<br>
+    12 접근 제어
+  </div>
+
+  <div class="note" style="margin-top:18px">
+    <b>읽는 순서</b> — 각 페이지 왼쪽은 구현된 화면, 오른쪽은 그 화면이 호출하는 API다.
+    응답 JSON 은 실제 값이 든 예시이므로 그대로 목업으로 써도 된다.
+  </div>
+</div>
+
+<!-- ============ 01 공통 규칙 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">01</span>
+    <h2 class="page-title">공통 규칙</h2>
+    <span class="page-sub">모든 API 에 적용</span>
+  </div>
+
+  <div class="cols">
+    <div style="flex:1">
+      <h5>기본</h5>
+      <table>
+        <tr><th style="width:30%">Base URL</th><td><code>/api</code> (개발 <code>http://localhost:3000/api</code>)</td></tr>
+        <tr><th>앱 인증</th><td><code>Authorization: Bearer &lt;Supabase access token&gt;</code></td></tr>
+        <tr><th>디바이스 인증</th><td><code>X-Device-Key: &lt;기기 API 키&gt;</code></td></tr>
+        <tr><th>형식</th><td><code>application/json</code></td></tr>
+        <tr><th>모든 시각</th><td>UTC ISO 8601 <code>"2026-08-23T23:00:00Z"</code><br>KST 변환은 화면이 한다</td></tr>
+        <tr><th>예외</th><td><code>Medication.time</code> 만 벽시계 값 <code>"08:00"</code></td></tr>
+        <tr><th>모든 id</th><td><b>문자열</b> (JS 숫자 정밀도 문제 회피)</td></tr>
+        <tr><th>전화번호</th><td>숫자만 <code>"01012345678"</code> · 하이픈은 화면이 붙인다</td></tr>
+      </table>
+
+      <h5>응답 모양 규칙</h5>
+      <ul>
+        <li>응답 최상위는 <b>항상 객체로 감싼다</b></li>
+        <li><b>하나만 돌려줄 때도 배열에 담는다</b> — <code>{ "devices": [ {...} ] }</code><br>
+            → 클라이언트 코드가 항상 같다. <code>map()</code> 이 어디서나 안전</li>
+        <li><b>"없음" 은 <code>null</code> 이 아니라 빈 배열</b> — <code>{ "medications": [] }</code><br>
+            → <code>null</code> 체크가 사라진다</li>
+        <li>경로가 가리키는 <b>자원 자체</b>가 없으면 <code>404</code> /
+            그 자원의 <b>부속물</b>이 없으면 <code>200</code> + <code>[]</code></li>
+        <li>자원은 <b>경로</b>, 거르는 조건은 <b>쿼리스트링</b></li>
+      </ul>
+    </div>
+
+    <div style="flex:1">
+      <h5>오류 응답 — 표준이 없으므로 프로젝트에서 정한다</h5>
+      <pre>{
+  <span class="ky">"error"</span>: {
+    <span class="ky">"type"</span>:    "validation_error",
+    <span class="ky">"code"</span>:    "INVALID_CODE",
+    <span class="ky">"message"</span>: "등록코드가 일치하지 않습니다"
+  }
+}</pre>
+      <table>
+        <tr><th style="width:22%">message</th><td><b>사용자</b>가 읽는다. 화면 오류 띠에 <b>그대로 출력</b></td></tr>
+        <tr><th>code</th><td>프로그램 — <b>정확히 이 오류</b>일 때만 분기</td></tr>
+        <tr><th>type</th><td>프로그램 — <b>비슷한 오류를 묶어</b> 같은 대응</td></tr>
+      </table>
+
+      <h5>type — 프론트가 어떻게 대응해야 하는가</h5>
+      <table>
+        <tr><td><code>auth_error</code></td><td>로그인 화면으로 보낸다</td></tr>
+        <tr><td><code>permission_error</code></td><td>목록으로 되돌리고 안내</td></tr>
+        <tr><td><code>validation_error</code></td><td>그 화면에 머물며 입력을 고치게</td></tr>
+        <tr><td><code>state_error</code></td><td>이미 처리됐거나 사라짐 → 화면을 새로 불러온다</td></tr>
+      </table>
+
+      <h5>상태 코드 (422 는 쓰지 않는다)</h5>
+      <table>
+        <tr><th>HTTP</th><th>code</th><th>언제</th></tr>
+        <tr><td>400</td><td><code>VALIDATION_ERROR</code></td><td>필수값 누락, 형식 오류</td></tr>
+        <tr><td>400</td><td><code>SERIAL_NOT_FOUND</code></td><td>그런 일련번호 없음</td></tr>
+        <tr><td>400</td><td><code>INVALID_CODE</code></td><td>등록코드 불일치</td></tr>
+        <tr><td>400</td><td><code>DOSE_NOT_DUE</code></td><td>아직 오지 않은 복약 건</td></tr>
+        <tr><td>401</td><td><code>UNAUTHORIZED</code></td><td>토큰 없음·만료</td></tr>
+        <tr><td>401</td><td><code>INVALID_DEVICE_KEY</code></td><td>기기 API 키 틀림</td></tr>
+        <tr><td>403</td><td><code>FORBIDDEN</code></td><td>내 기기/내 알림이 아님</td></tr>
+        <tr><td>404</td><td><code>DEVICE_NOT_FOUND</code></td><td>경로의 기기 id 없음</td></tr>
+        <tr><td>404</td><td><code>NOT_FOUND</code></td><td>경로의 복약 건·알림 id 없음</td></tr>
+        <tr><td>409</td><td><code>ALREADY_REGISTERED</code></td><td>이미 등록된 기기</td></tr>
+        <tr><td>409</td><td><code>ALREADY_TAKEN</code></td><td>이미 복용 처리됨</td></tr>
+      </table>
+      <div class="note"><b>401 과 403</b> — 401 은 "출입증을 안 보여줬다"(인증), 403 은 "출입증은 봤는데 이 층은 못 들어간다"(인가)</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 02 공통 객체 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">02</span>
+    <h2 class="page-title">공통 객체 4개</h2>
+    <span class="page-sub">어느 API 에서든 같은 필드 목록</span>
+  </div>
+
+  <div class="cols">
+    <div style="flex:1">
+      <h5>Device</h5>
+      <pre>{
+  <span class="ky">"id"</span>:            "d3f1a2b4-9c8e-4f21-b7a3-0e5d6c1f8a92",
+  <span class="ky">"serial"</span>:        "PB-2026-0001",
+  <span class="ky">"nickname"</span>:      "할아버지 기기",
+  <span class="ky">"patient_phone"</span>: "01012345678",
+  <span class="ky">"timezone"</span>:      "Asia/Seoul"
+}</pre>
+      <div class="note warn">
+        <b>registration_code · device_api_key 는 절대 내려주지 않는다.</b><br>
+        등록코드가 새면 "기기를 만져본 사람만 안다" 는 전제가 깨지고,
+        API 키가 새면 <code>curl</code> 로 <code>taken</code> 거짓 보고를 보낼 수 있다.<br>
+        <b>DB 컬럼 목록 ≠ API 응답 필드 목록.</b>
+      </div>
+      <ul>
+        <li><code>patient_phone</code> — 없으면 <code>null</code>. 있을 때만 화면 4 에 [전화 걸기]</li>
+        <li><code>timezone</code> — 어느 화면도 안 쓴다. 서버가 "매일 08:00" 을 UTC 로 바꿀 때 쓰는 내부 계산용</li>
+      </ul>
+
+      <h5>Medication <span style="font-weight:400;color:#666">— 약 설정 = 시간표</span></h5>
+      <pre>{
+  <span class="ky">"id"</span>:        "31",
+  <span class="ky">"device_id"</span>: "d3f1a2b4-...",
+  <span class="ky">"name"</span>:      "혈압약",
+  <span class="ky">"dosage"</span>:    "1정",
+  <span class="ky">"time"</span>:      "08:00",
+  <span class="ky">"days"</span>:      [0, 1, 2, 3, 4, 5, 6]
+}</pre>
+      <div class="note">
+        <b>★ time 은 UTC 가 아니다 — 시각 규칙의 유일한 예외</b><br>
+        "매일 08:00" 은 순간이 아니라 <b>규칙</b>이라 UTC 로 바꿀 수 없다.
+        UTC 로 바꾸려면 "어느 날의 08시" 인지가 있어야 하는데 매일 반복되는 값에는 날짜가 없다.<br><br>
+        <code>medications.time "08:00"</code> + <code>devices.timezone</code><br>
+        &nbsp;&nbsp;↓ 서버가 그날의 복약 건을 만들 때 계산<br>
+        <code>doses.scheduled_at "2026-08-23T23:00:00Z"</code><br><br>
+        <b>시간표는 벽시계, 출석부는 UTC.</b>
+      </div>
+      <ul>
+        <li><code>days</code> — 0=일 ~ 6=토 (JS <code>Date.getDay()</code> 와 같은 번호)</li>
+        <li>기기당 <b>1줄</b>이므로 배열에 0개 또는 1개뿐</li>
+      </ul>
+    </div>
+
+    <div style="flex:1">
+      <h5>Dose <span style="font-weight:400;color:#666">— 복약 건 = 출석부 한 줄</span></h5>
+      <pre>{
+  <span class="ky">"id"</span>:           "8821",
+  <span class="ky">"device_id"</span>:    "d3f1a2b4-...",
+  <span class="ky">"scheduled_at"</span>: "2026-08-23T23:00:00Z",
+  <span class="ky">"status"</span>:       "missed",
+  <span class="ky">"notified_at"</span>:  "2026-08-23T23:00:00Z",
+  <span class="ky">"dispensed_at"</span>: null,
+  <span class="ky">"taken_at"</span>:     null,
+  <span class="ky">"taken_source"</span>: null
+}</pre>
+      <table>
+        <tr><th style="width:26%">status</th><td><code>scheduled</code> · <code>notified</code> · <code>dispensed</code> · <code>taken</code> · <code>missed</code></td></tr>
+        <tr><th>taken_source</th><td><code>ir</code> · <code>camera</code> · <code>manual</code> · <code>null</code></td></tr>
+      </table>
+      <div class="note">
+        <b>시각 4개를 항상 다 내려준다.</b> <code>missed</code> 가 두 종류인 것을 화면이 구분해야 한다.<br>
+        <code>dispensed_at</code> 이 <b>비었는데</b> missed → ✕ 약을 안 꺼내셨어요<br>
+        <code>dispensed_at</code> 이 <b>있는데</b> missed → ⚠ 꺼내셨는데 아직 안 드셨어요
+      </div>
+
+      <h5>Notification</h5>
+      <pre>{
+  <span class="ky">"id"</span>:         "412",
+  <span class="ky">"device_id"</span>:  "d3f1a2b4-...",
+  <span class="ky">"dose_id"</span>:    "8821",
+  <span class="ky">"type"</span>:       "missed_not_dispensed",
+  <span class="ky">"message"</span>:    "약을 안 꺼내셨어요",
+  <span class="ky">"created_at"</span>: "2026-08-23T23:05:00Z",
+  <span class="ky">"read_at"</span>:    null
+}</pre>
+      <table>
+        <tr><th style="width:26%">type</th><td><code>missed_not_dispensed</code> (안 꺼냄)<br><code>missed_not_taken</code> (꺼냈으나 미복용)</td></tr>
+        <tr><th>read_at</th><td>안 읽었으면 <code>null</code></td></tr>
+      </table>
+      <div class="note">
+        <b>message 는 서버가 type 으로부터 만든다. DB 에 저장하지 않는다.</b><br>
+        · 저장 안 하는 이유 — 문구를 고치면 과거 알림까지 같이 바뀐다<br>
+        · 서버가 만드는 이유 — 나중에 FCM 푸시도 같은 함수를 써야
+        <b>목록과 푸시 문구가 어긋나지 않는다</b>
+      </div>
+      <div class="note">
+        <b>기기 별명과 복약 건은 여기 안 담는다.</b>
+        <code>devices</code> · <code>doses</code> 배열을 따로 주고 화면이 id 로 짝을 맞춘다.
+        같은 기기 알림이 여러 개일 때 별명이 중복해서 실리는 것을 막고,
+        나중에 알림 목록에 기기 아이콘·전화 버튼을 넣어도 서버를 안 고친다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 03 화면 1 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">03</span>
+    <h2 class="page-title">화면 1 — 로그인 / 회원가입</h2>
+    <span class="page-sub">LoginPage.jsx</span>
+  </div>
+
+  <div class="cols">
+    <div class="col-screen">
+      <div class="phone">
+        <div class="screen-body" style="background:#fff;padding:14px 10px">
+          <div style="text-align:center;margin:30px 0 20px">
+            <div style="font-size:22pt">💊</div>
+            <div style="font-size:12pt;font-weight:700;margin-top:5px">복약기</div>
+            <div style="font-size:7pt;color:var(--light)">부모님의 복약을 함께 챙깁니다</div>
+          </div>
+          <div class="field"><div class="lb">이메일</div><div class="vl" style="color:#bbb">example@email.com</div></div>
+          <div class="field" style="margin-bottom:10px"><div class="lb">비밀번호</div><div class="vl" style="color:#bbb">6자 이상</div></div>
+          <div class="btn btn-p">로그인</div>
+          <div class="btn btn-g">회원가입</div>
+          <div style="text-align:center;font-size:7pt;color:#bbb;margin-top:16px">— 또는 —<br>소셜 로그인은 추후 제공됩니다</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-api">
+      <div class="ep">
+        <span class="u">서버 API 없음</span>
+        <span class="when">Supabase Auth 를 프론트에서 직접 호출한다</span>
+      </div>
+
+      <h5>왜 우리 서버를 거치지 않나</h5>
+      <ul>
+        <li>회원가입·로그인·토큰 발급·만료 관리를 <b>Supabase Auth 가 통째로 담당</b>한다</li>
+        <li>우리 서버(Express)는 <b>발급된 토큰을 검증</b>하기만 한다</li>
+      </ul>
+
+      <pre><span class="cm">// 로그인 (프론트에서 직접)</span>
+const { data, error } = await supabase.auth
+  .signInWithPassword({ email, password })
+
+<span class="cm">// 이후 모든 API 호출에 이 토큰을 헤더로 실어 보낸다</span>
+fetch('/api/devices', {
+  headers: { Authorization: `Bearer ${data.session.access_token}` }
+})</pre>
+
+      <h5>서버가 토큰으로 하는 일</h5>
+      <pre>① Authorization 헤더에서 토큰을 꺼낸다
+② 서명을 검증한다 (Supabase 가 발급한 것인지)
+③ 토큰 안의 user_id 를 얻는다
+④ 그 user_id 로 DB 를 조회한다
+
+   SELECT d.* FROM devices d
+   JOIN user_devices ud ON ud.device_id = d.id
+   WHERE ud.user_id = '&lt;토큰에서 얻은 값&gt;'   ← "내 것" 이 걸러진다</pre>
+
+      <div class="note">
+        <b>클라이언트는 "누구의 데이터를 달라" 고 말하지 않는다.</b>
+        말할 수 있게 두면 남의 <code>user_id</code> 를 적어 보내는 순간 뚫린다.
+        <b>누구인지는 오직 토큰만이 말한다.</b><br>
+        호텔에 비유하면 — 프런트에 "302호 열쇠 주세요" 라고 말하는 게 아니라,
+        카드키를 대면 기계가 알아서 그 사람 방만 열어주는 것.
+      </div>
+
+      <h5>화면이 받는 props (퍼블리싱 계약)</h5>
+      <table>
+        <tr><td><code>loading</code></td><td>요청 중 (버튼 비활성 + 스피너)</td></tr>
+        <tr><td><code>error</code></td><td>오류 문구 (없으면 <code>null</code>)</td></tr>
+        <tr><td><code>onLogin(values)</code></td><td><code>{ email, password }</code></td></tr>
+        <tr><td><code>onSignup(values)</code></td><td><code>{ email, password }</code></td></tr>
+      </table>
+      <div class="note">
+        화면 검증은 <b>형식까지만</b> — 빈칸, 이메일 모양, 6자 이상.
+        "이미 가입된 이메일" 은 서버만 알 수 있으므로 <code>error</code> 로 받아 표시한다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 04 화면 2 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">04</span>
+    <h2 class="page-title">화면 2 — 기기 목록</h2>
+    <span class="page-sub">DeviceListPage.jsx · 첫 화면</span>
+  </div>
+
+  <div class="cols">
+    <div class="col-screen">
+      <div class="phone">
+        <div class="navbar"><span class="l">로그아웃</span>기기<span class="r">+ 등록</span></div>
+        <div class="screen-body">
+          <div class="card">
+            <div class="nick">할아버지 기기</div>
+            <div class="serial">PB-2026-0001</div>
+            <div style="margin-top:5px"><span style="font-size:7pt;color:var(--weak)">오늘 </span>
+              <span class="chip c-bad">✕ 약을 안 꺼냄</span></div>
+          </div>
+          <div class="card">
+            <div class="nick">어머니 기기</div>
+            <div class="serial">PB-2026-0042</div>
+            <div style="margin-top:5px"><span style="font-size:7pt;color:var(--weak)">오늘 </span>
+              <span class="chip c-ok">✓ 복용 완료</span></div>
+          </div>
+        </div>
+        <div class="tabbar"><div class="on">🗄 기기</div><div>🔔 알림<span class="badge">2</span></div></div>
+      </div>
+      <div class="note" style="margin-top:6px;font-size:7pt">
+        <b>4가지 상태</b> 모두 구현 — 정상 / 비어있음(등록 버튼) / 로딩(스켈레톤) / 오류(다시 시도)
+      </div>
+    </div>
+
+    <div class="col-api">
+      <div class="ep">
+        <span class="m">GET</span><span class="u">/api/devices</span>
+        <span class="when">화면 열릴 때 · 당겨서 새로고침 · 30초 폴링 — 모두 같은 호출</span>
+      </div>
+
+      <h5>요청</h5>
+      <pre>GET /api/devices?limit=20&amp;offset=0
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+
+<span class="cm">· limit / offset 둘 다 선택 (기본 20 / 0)</span>
+<span class="cm">· 정렬은 별명 가나다순 고정 — 쿼리로 못 바꾼다</span></pre>
+
+      <h5>응답 200</h5>
+      <pre>{
+  <span class="ky">"devices"</span>: [
+    { "id": "d3f1a2b4-...", "serial": "PB-2026-0001",
+      "nickname": "할아버지 기기",
+      "patient_phone": "01012345678", "timezone": "Asia/Seoul" },
+    { "id": "a7c2e5f8-...", "serial": "PB-2026-0042",
+      "nickname": "어머니 기기",
+      "patient_phone": null, "timezone": "Asia/Seoul" }
+  ],
+  <span class="ky">"today_doses"</span>: [
+    { "id": "8821", "device_id": "d3f1a2b4-...",
+      "scheduled_at": "2026-08-23T23:00:00Z", "status": "missed",
+      "notified_at": "2026-08-23T23:00:00Z", "dispensed_at": null,
+      "taken_at": null, "taken_source": null },
+    { "id": "9104", "device_id": "a7c2e5f8-...",
+      "scheduled_at": "2026-08-24T00:30:00Z", "status": "taken",
+      "notified_at": "2026-08-24T00:30:00Z",
+      "dispensed_at": "2026-08-24T00:31:00Z",
+      "taken_at": "2026-08-24T00:33:00Z", "taken_source": "camera" }
+  ],
+  <span class="ky">"unread_count"</span>: 2,
+  <span class="ky">"has_more"</span>: false
+}</pre>
+
+      <h5>설계 요점</h5>
+      <ul>
+        <li><b>배열을 나눠 주고 화면이 <code>device_id</code> 로 짝을 맞춘다.</b>
+            카드 한 장에 <code>devices</code> + <code>doses</code> 두 테이블이 섞여 있다</li>
+        <li><code>today_doses</code> — <b>기기 타임존 기준 오늘</b>의 복약 건.
+            오늘이 복용 요일이 아니거나 약 미설정이면 <b>그 기기의 줄이 없다</b></li>
+        <li><code>unread_count</code> — 하단 탭 배지. <b>별도 API 없이 여기에 얹는다.</b>
+            배지가 보이는 화면은 2·7 둘뿐이고, 폴링할 때 <b>카드도 같이 갱신되는</b> 이득이 있다</li>
+        <li><b>offset 페이지네이션인 이유</b> — 기기 목록은 보호자가 직접 등록할 때만 늘어나 순번이 밀릴 일이 없다.
+            정렬이 별명 가나다순이라 커서로 쓸 값(별명)이 중복 가능하고 한글 정렬 순서가 DB 설정에 따라 달라진다</li>
+        <li>빈 상태 — <code>200</code> + 두 배열 모두 <code>[]</code>, <code>unread_count: 0</code> (<b>404 아님</b>)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 05 화면 3 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">05</span>
+    <h2 class="page-title">화면 3 — 기기 등록</h2>
+    <span class="page-sub">DeviceRegisterPage.jsx</span>
+  </div>
+
+  <div class="cols">
+    <div class="col-screen">
+      <div class="phone">
+        <div class="navbar"><span class="l">←</span>기기 등록</div>
+        <div class="screen-body">
+          <div style="background:#eaf3ff;color:#2560a8;border-radius:5px;padding:6px;font-size:7pt;margin-bottom:6px">
+            <b>등록 정보는 어디에 있나요?</b><br>
+            일련번호와 등록코드는 <b>기기 뒷면 스티커</b>에 적혀 있습니다.
+          </div>
+          <div class="field"><div class="lb">일련번호</div><div class="vl">PB-2026-0001</div></div>
+          <div class="field"><div class="lb">등록코드</div>
+            <div class="vl" style="letter-spacing:3px;font-size:10pt;font-weight:700">A1B2C3</div></div>
+          <div class="field" style="margin-bottom:10px"><div class="lb">기기 별명 <span style="color:#bbb">선택</span></div>
+            <div class="vl">할아버지 기기</div></div>
+          <div class="btn btn-p">등록하기</div>
+          <div class="btn" style="color:var(--weak)">취소</div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:6px;font-size:7pt">
+        열릴 때 서버를 <b>부르지 않는다</b> — 빈 폼이다.
+      </div>
+    </div>
+
+    <div class="col-api">
+      <div class="ep">
+        <span class="m post">POST</span><span class="u">/api/user-devices</span>
+        <span class="when">[등록하기] 를 눌렀을 때</span>
+      </div>
+
+      <div class="note">
+        <b>경로가 <code>/api/devices</code> 가 아닌 이유</b> — 이 API 가 만드는 것은
+        <b>기기가 아니라 연결</b>이다. 기기(<code>PB-2026-0001</code>)는 공장에서 이미 만들어져 DB 에 있고,
+        새로 생기는 것은 <code>user_devices</code> 의 한 줄이다.
+        <code>devices</code> 테이블은 손대지 않는다.<br>
+        나중에 "등록 해제" 를 만들 때도 <code>DELETE /api/user-devices/:id</code> 가
+        <b>"연결을 끊는다"</b> 로 정확히 읽힌다.
+      </div>
+
+      <h5>요청</h5>
+      <pre>POST /api/user-devices
+Authorization: Bearer eyJhbGci...
+Content-Type: application/json
+
+{
+  <span class="ky">"serial"</span>:   "PB-2026-0001",
+  <span class="ky">"code"</span>:     "A1B2C3",
+  <span class="ky">"nickname"</span>: "할아버지 기기"
+}</pre>
+
+      <h5>응답 201 Created</h5>
+      <pre>{
+  <span class="ky">"devices"</span>: [
+    { "id": "d3f1a2b4-...", "serial": "PB-2026-0001",
+      "nickname": "할아버지 기기",
+      "patient_phone": null, "timezone": "Asia/Seoul" }
+  ]
+}</pre>
+
+      <h5>실패 응답</h5>
+      <table>
+        <tr><th>HTTP</th><th>code</th><th>message (화면에 그대로 출력)</th></tr>
+        <tr><td>400</td><td><code>VALIDATION_ERROR</code></td><td>일련번호를 입력해 주세요</td></tr>
+        <tr><td>400</td><td><code>VALIDATION_ERROR</code></td><td>등록코드는 영문·숫자 6자리입니다</td></tr>
+        <tr><td>400</td><td><code>SERIAL_NOT_FOUND</code></td><td>해당 일련번호의 기기를 찾을 수 없습니다</td></tr>
+        <tr><td>400</td><td><code>INVALID_CODE</code></td><td>등록코드가 일치하지 않습니다</td></tr>
+        <tr><td>409</td><td><code>ALREADY_REGISTERED</code></td><td>이미 등록된 기기입니다</td></tr>
+      </table>
+
+      <h5>서버 처리</h5>
+      <pre>① devices 에서 serial 로 기기를 찾는다
+   (대소문자·공백·하이픈을 무시하고 비교)
+② code 가 맞는지 확인한다
+③ user_devices 에 (user_id, device_id) 한 줄 추가</pre>
+
+      <div class="note">
+        <b>왜 등록코드가 필요한가</b> — 일련번호는 <code>PB-2026-0001</code>, <code>0002</code> …
+        <b>순차적</b>이다. 코드가 없다면 옆 번호를 찍어 남의 기기를 등록하고,
+        복약 기록을 보거나 <b>복용 시간을 바꿔버릴 수</b> 있다.<br>
+        일련번호는 <b>공개돼야 쓸모 있는 값</b>(AS 문의 시 불러줌)이고,
+        등록코드는 <b>기기를 실제로 가진 사람만 아는 값</b>이다.
+      </div>
+
+      <div class="note warn">
+        <b>서버는 클라이언트를 믿지 않는다.</b> 화면이 <code>trim().toUpperCase()</code> 를 하지만
+        서버도 반드시 해야 한다 — <code>curl</code> 로 직접 보낼 수 있다.<br>
+        <b>화면의 정리는 사용자 편의, 서버의 정리는 필수.</b>
+      </div>
+
+      <div class="note">
+        <b>등록 성공 후</b> — 화면 2 로 이동한 뒤 <code>GET /api/devices</code> 를 <b>다시 호출</b>한다.
+        가나다순 정렬 + 페이지네이션 때문에 프론트가 새 기기를 끼워 넣을 위치를 판단할 수 없다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 06 화면 4 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">06</span>
+    <h2 class="page-title">화면 4 — 기기 상세 (이번 주)</h2>
+    <span class="page-sub">DeviceDetailPage.jsx</span>
+  </div>
+
+  <div class="cols">
+    <div class="col-screen">
+      <div class="phone">
+        <div class="navbar"><span class="l">←</span>할아버지 기기 · 이번주</div>
+        <div class="screen-body">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px">
+              <b style="font-size:8.5pt">주간 현황</b>
+              <span style="font-size:6.5pt;color:var(--light)">17일 ~ 23일</span>
+            </div>
+            <div class="week">
+              <div><div class="wd">월</div><div class="dy">17</div><div class="mk c-ok">✓</div></div>
+              <div><div class="wd">화</div><div class="dy">18</div><div class="mk c-ok">✓</div></div>
+              <div><div class="wd">수</div><div class="dy">19</div><div class="mk c-warn">⚠</div></div>
+              <div><div class="wd">목</div><div class="dy">20</div><div class="mk c-bad">✕</div></div>
+              <div><div class="wd">금</div><div class="dy">21</div><div class="mk c-ok">✓</div></div>
+              <div><div class="wd">토</div><div class="dy">22</div><div class="mk c-ok">✓</div></div>
+              <div class="today-cell"><div class="wd" style="color:var(--primary)">일</div><div class="dy">23</div><div class="mk c-bad">✕</div></div>
+            </div>
+            <div class="legend">✓ 복용 &nbsp; ✕ 안 꺼냄 &nbsp; ⚠ 미복용 &nbsp; ⏳ 진행중 &nbsp; · 예정</div>
+          </div>
+          <div class="btn btn-o">약 설정</div>
+          <div class="btn btn-g">복약 기록</div>
+          <div class="btn btn-s">전화 걸기 (010-1234-5678)</div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:6px;font-size:7pt">
+        칸을 탭하면 <b>공용 팝업</b>(10페이지)이 열린다. 오늘 칸은 옅은 파란 배경.
+      </div>
+    </div>
+
+    <div class="col-api">
+      <div class="ep">
+        <span class="m">GET</span><span class="u">/api/devices/:id/doses</span>
+        <span class="when">★ 화면 6(복약 기록)과 <b>같은 API</b> — 기간만 다르게 부른다</span>
+      </div>
+
+      <h5>요청</h5>
+      <pre>GET /api/devices/d3f1a2b4-9c8e-4f21-b7a3-0e5d6c1f8a92/doses
+      ?from=2026-08-17&amp;to=2026-08-23
+Authorization: Bearer eyJhbGci...
+
+<span class="cm">경로의 :id 는 UUID (Device.id). serial 이 아니다.</span>
+<span class="cm">serial 은 순차적이라 URL 에 쓰면 옆 번호를 찍어볼 수 있다.</span></pre>
+
+      <h5>응답 200</h5>
+      <pre>{
+  <span class="ky">"devices"</span>: [
+    { "id": "d3f1a2b4-...", "serial": "PB-2026-0001",
+      "nickname": "할아버지 기기",
+      "patient_phone": "01012345678", "timezone": "Asia/Seoul" }
+  ],
+  <span class="ky">"doses"</span>: [
+    { "id": "8821", "device_id": "d3f1a2b4-...",
+      "scheduled_at": "2026-08-23T23:00:00Z", "status": "missed",
+      "notified_at": "2026-08-23T23:00:00Z", "dispensed_at": null,
+      "taken_at": null, "taken_source": null },
+    { "id": "8820", "device_id": "d3f1a2b4-...",
+      "scheduled_at": "2026-08-22T23:00:00Z", "status": "taken",
+      "notified_at": "2026-08-22T23:00:00Z",
+      "dispensed_at": "2026-08-22T23:02:00Z",
+      "taken_at": "2026-08-22T23:03:00Z", "taken_source": "ir" }
+    <span class="cm">// ... 이 기간에 존재하는 복약 건만</span>
+  ],
+  <span class="ky">"medications"</span>: [
+    { "id": "31", "device_id": "d3f1a2b4-...", "name": "혈압약",
+      "dosage": "1정", "time": "08:00", "days": [0,1,2,3,4,5,6] }
+  ],
+  <span class="ky">"has_more"</span>: true
+}</pre>
+
+      <h5>설계 요점</h5>
+      <ul>
+        <li><b>doses 는 7개가 아닐 수 있다.</b> 복용 요일이 월·수·금이면 3개다.
+            화면이 자기가 보낸 <code>from</code>~<code>to</code> 로 <b>날짜 7칸을 먼저 그리고</b>
+            각 날짜의 복약 건을 찾아 끼운다. 없는 칸은 점선</li>
+        <li><code>devices</code> 를 같이 담는 이유 — 화면이 별명·전화번호를 쓴다.
+            라우터를 붙이면 <b>이 화면으로 바로 들어오거나 새로고침</b>할 수 있으므로
+            "화면 2 를 거쳐 왔다" 고 가정하면 안 된다</li>
+        <li><code>medications</code> — <b>약 미설정 구분용</b><br>
+            <code>[]</code> → 약을 아직 설정 안 함 → "약 설정하기" 버튼<br>
+            <code>[{...}]</code> → 설정은 있는데 이번 주에 복용 요일이 없음 → 그냥 빈 주</li>
+        <li><b>날짜 범위로 자르므로 <code>limit</code>·<code>before</code>·<code>offset</code> 이 필요 없다.</b>
+            <code>8/17~8/23</code> 은 새 기록이 쌓여도 같은 구간이라 순번이 밀리는 문제가 없다 —
+            커서 방식의 장점을 그냥 얻는다</li>
+        <li>빈 상태 — 기기가 없으면 <code>404 DEVICE_NOT_FOUND</code> /
+            복약 건이 없으면 <code>200</code> + <code>"doses": []</code></li>
+      </ul>
+
+      <div class="note">
+        <b>날짜를 프론트가 계산하는 것은 MVP 한정.</b>
+        <code>spec.md</code> §3.4 가 "화면에는 KST 로 표시" 라고 못박아 이 앱은 한국 전용이므로
+        브라우저 시계와 서버 시계가 일치한다.
+        해외 거주 보호자를 지원하게 되면 — <b>API 모양은 그대로 두고</b>
+        <code>from</code>/<code>to</code> 가 없을 때 서버가 기기 타임존 기준 기본값을 채우면 된다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 07 화면 5 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">07</span>
+    <h2 class="page-title">화면 5 — 약 설정</h2>
+    <span class="page-sub">MedicationPage.jsx</span>
+  </div>
+
+  <div class="cols">
+    <div class="col-screen">
+      <div class="phone">
+        <div class="navbar"><span class="l">←</span>약 설정</div>
+        <div class="screen-body">
+          <div style="font-size:7pt;color:var(--weak);margin-bottom:4px">할아버지 기기</div>
+          <div class="field"><div class="lb">약 이름</div><div class="vl">혈압약</div></div>
+          <div class="field"><div class="lb">용량</div><div class="vl">1정</div></div>
+          <div class="field"><div class="lb">복용 시간</div>
+            <div class="vl" style="font-size:11pt;font-weight:700">08:00</div></div>
+          <div class="field" style="margin-bottom:8px">
+            <div class="lb">복용 요일</div>
+            <div style="display:flex;gap:2px;margin-top:3px">
+              <span class="chip" style="color:var(--primary);background:#e8f3ff">월</span>
+              <span class="chip" style="color:var(--primary);background:#e8f3ff">화</span>
+              <span class="chip" style="color:var(--primary);background:#e8f3ff">수</span>
+              <span class="chip" style="color:var(--primary);background:#e8f3ff">목</span>
+              <span class="chip" style="color:var(--primary);background:#e8f3ff">금</span>
+              <span class="chip c-mute">토</span>
+              <span class="chip c-mute">일</span>
+            </div>
+          </div>
+          <div style="background:#f0f0f0;border-radius:4px;padding:5px;font-size:6.5pt;color:var(--weak);margin-bottom:6px">
+            저장하면 <b>다음 복약분부터</b> 적용됩니다. 이미 지난 기록은 바뀌지 않습니다.
+          </div>
+          <div class="btn btn-p">저장</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-api">
+      <div class="ep">
+        <span class="m">GET</span><span class="u">/api/devices/:id/medications</span>
+        <span class="when">화면 열릴 때</span>
+      </div>
+      <pre>{
+  <span class="ky">"devices"</span>: [ { "...Device..." } ],
+  <span class="ky">"medications"</span>: [
+    { "id": "31", "device_id": "d3f1a2b4-...", "name": "혈압약",
+      "dosage": "1정", "time": "08:00", "days": [1,2,3,4,5] }
+  ]
+}</pre>
+      <div class="note">
+        <b>약을 아직 설정 안 했으면</b> <code>200</code> + <code>"medications": []</code> —
+        <b>404 가 아니다.</b> 새 기기는 "없는 게 정상" 이지 오류가 아니다.
+        프론트가 오류 분기를 안 만들어도 된다.
+      </div>
+
+      <div class="ep" style="margin-top:10px">
+        <span class="m put">PUT</span><span class="u">/api/devices/:id/medications</span>
+        <span class="when">[저장] 을 눌렀을 때</span>
+      </div>
+      <pre><span class="cm">// 요청</span>
+{
+  <span class="ky">"name"</span>:   "혈압약",
+  <span class="ky">"dosage"</span>: "1정",
+  <span class="ky">"time"</span>:   "08:00",
+  <span class="ky">"days"</span>:   [1, 2, 3, 4, 5]
+}
+
+<span class="cm">// 응답 200</span>
+{ <span class="ky">"medications"</span>: [ { "...Medication..." } ] }</pre>
+
+      <h5>★ POST 가 아니라 PUT 인 이유 — 멱등</h5>
+      <table>
+        <tr><th style="width:16%">POST</th><td>"새로 만들어라" → <b>두 번 보내면 두 개가 생길 수 있다</b></td></tr>
+        <tr><th>PUT</th><td>"이 주소를 이 내용으로 만들어라" → <b>몇 번 보내도 결과가 같다</b></td></tr>
+      </table>
+      <div class="note">
+        약 설정은 <b>기기당 1줄</b>이고 저장은 항상 <b>덮어쓰기</b>다.
+        저장 버튼을 두 번 눌러도, 네트워크가 느려 요청이 두 번 나가도 결과가 같아야 한다.<br>
+        PostgreSQL 의 <code>ON CONFLICT (device_id) DO UPDATE</code> 로 구현한다.
+      </div>
+
+      <h5>실패 응답</h5>
+      <table>
+        <tr><th>HTTP</th><th>code</th><th>언제</th></tr>
+        <tr><td>400</td><td><code>VALIDATION_ERROR</code></td><td>약 이름·용량 빈칸, 시각 형식 오류, 요일 0개</td></tr>
+        <tr><td>403</td><td><code>FORBIDDEN</code></td><td>내 기기가 아님</td></tr>
+        <tr><td>404</td><td><code>DEVICE_NOT_FOUND</code></td><td>그런 기기 없음</td></tr>
+      </table>
+
+      <div class="note">
+        <b>저장 이후의 복약 건부터 적용된다.</b> 이미 만들어진 과거 건은 바뀌지 않는다.<br>
+        <b>시간표(medication)를 고치는 것이지 출석부(dose)를 고치는 것이 아니다.</b>
+      </div>
+
+      <div class="note">
+        <b>화면 구현 참고</b> — 복용 시간은 antd-mobile 의 <code>Picker</code>(시/분 2칸),
+        요일은 <code>Selector</code>(multiple) 로 만들었다.
+        <code>DatePicker</code> 는 연도부터 칸이 누적돼 "시각만" 고를 수 없다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 08 화면 6 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">08</span>
+    <h2 class="page-title">화면 6 — 복약 기록</h2>
+    <span class="page-sub">DoseHistoryPage.jsx</span>
+  </div>
+
+  <div class="cols">
+    <div class="col-screen">
+      <div class="phone">
+        <div class="navbar"><span class="l">←</span>복약 기록</div>
+        <div class="screen-body" style="padding:0;background:#fff">
+          <div style="padding:5px 6px;font-size:6.5pt;color:var(--weak)">할아버지 기기 · 최근 30일</div>
+          <div class="row-item"><span><b style="font-size:8pt">8월 23일 (일)</b><br>
+            <span style="font-size:6.5pt;color:var(--light)">예정 08:00</span></span>
+            <span class="chip c-bad">✕ 약을 안 꺼냄 08:00</span></div>
+          <div class="row-item"><span><b style="font-size:8pt">8월 22일 (토)</b><br>
+            <span style="font-size:6.5pt;color:var(--light)">예정 08:00</span></span>
+            <span class="chip c-ok">✓ 복용 완료 08:03</span></div>
+          <div class="row-item"><span><b style="font-size:8pt">8월 21일 (금)</b><br>
+            <span style="font-size:6.5pt;color:var(--light)">예정 08:00</span></span>
+            <span class="chip c-ok">✓ 복용 완료 08:05</span></div>
+          <div class="row-item"><span><b style="font-size:8pt">8월 20일 (목)</b><br>
+            <span style="font-size:6.5pt;color:var(--light)">예정 08:00</span></span>
+            <span class="chip c-warn">⚠ 꺼냈으나 미복용</span></div>
+          <div class="row-item"><span><b style="font-size:8pt">8월 19일 (수)</b><br>
+            <span style="font-size:6.5pt;color:var(--light)">예정 08:00</span></span>
+            <span class="chip c-ok">✓ 복용 완료 08:12</span></div>
+          <div style="text-align:center;padding:8px"><span class="btn btn-g" style="display:inline-block;padding:4px 14px">더 보기</span></div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:6px;font-size:7pt">
+        항목을 탭하면 <b>공용 팝업</b>이 열린다 — 지난 날짜의 수동 체크도 여기서.
+      </div>
+    </div>
+
+    <div class="col-api">
+      <div class="ep">
+        <span class="m">GET</span><span class="u">/api/devices/:id/doses</span>
+        <span class="when">★ 화면 4 와 <b>같은 API</b>. 응답 모양도 같다 (6페이지 참고)</span>
+      </div>
+
+      <h5>같은 API 를 기간만 다르게 부른다</h5>
+      <pre>화면 4       ?from=2026-08-17&amp;to=2026-08-23    이번 주 월~일
+화면 6       ?from=2026-07-25&amp;to=2026-08-23    최근 30일
+[더 보기]    ?from=2026-06-25&amp;to=2026-07-24    그 이전 30일</pre>
+
+      <div class="note">
+        <b>초안에서 가장 크게 줄인 지점.</b> 처음에는 화면 4 를 <code>/devices/:id/week</code>,
+        화면 6 을 <code>/devices/:id/doses</code> 로 나눠 두 개였다.<br>
+        <b>"이 API 가 무엇을 가져오는가"</b> 로 다시 물으니 둘 다
+        <b>"그 기기의 복약 건"</b> 이었고, 기간만 달랐다.
+        <b>라우터 하나로 두 화면이 해결되고 화면 6 은 공짜로 딸려온다.</b>
+      </div>
+
+      <h5>화면이 쓰는 필드</h5>
+      <table>
+        <tr><th style="width:24%">Device</th><td><code>nickname</code> (헤더)</td></tr>
+        <tr><th>Dose</th><td><code>id</code>(팝업의 taken 처리) · <code>scheduled_at</code> ·
+          <code>status</code> · <code>dispensed_at</code> · <code>taken_at</code> · <code>taken_source</code></td></tr>
+        <tr><th>has_more</th><td>[더 보기] 버튼을 보일지 판단</td></tr>
+      </table>
+      <div class="note" style="font-size:7pt">
+        <code>medications</code> 는 응답에 오지만 이 화면은 쓰지 않는다.
+        같은 자원은 어느 API 에서든 같은 모양이라는 원칙 때문 —
+        <b>안 쓰는 필드가 몇 개 오가는 비용은 감수한다.</b>
+      </div>
+
+      <h5>표시 규칙 (상태 → 아이콘)</h5>
+      <table>
+        <tr><th>status</th><th>조건</th><th>표시</th></tr>
+        <tr><td><code>taken</code></td><td>—</td><td><span class="c-ok">✓ 복용 완료</span></td></tr>
+        <tr><td><code>missed</code></td><td><code>dispensed_at</code> 이 <b>null</b></td><td><span class="c-bad">✕ 약을 안 꺼냄</span></td></tr>
+        <tr><td><code>missed</code></td><td><code>dispensed_at</code> 이 <b>있음</b></td><td><span class="c-warn">⚠ 꺼냈으나 미복용</span></td></tr>
+        <tr><td><code>notified</code> <code>dispensed</code></td><td>—</td><td><span class="c-warn">⏳ 진행중</span></td></tr>
+        <tr><td><code>scheduled</code></td><td>—</td><td><span class="c-mute">· 예정</span></td></tr>
+      </table>
+      <div class="note warn">
+        <b>색만으로 구분하지 않는다.</b> 놓침 두 종류는 색이 같으므로
+        아이콘(<b>✕</b> / <b>⚠</b>)까지 다르게 한다.
+        적록색약이면 초록/빨강이 구분되지 않는데 이 앱 사용자는 중장년층 보호자가 많다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 09 화면 7 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">09</span>
+    <h2 class="page-title">화면 7 — 알림 목록</h2>
+    <span class="page-sub">NotificationListPage.jsx</span>
+  </div>
+
+  <div class="cols">
+    <div class="col-screen">
+      <div class="phone">
+        <div class="navbar">알림</div>
+        <div class="screen-body" style="padding:0;background:#fff">
+          <div class="row-item row-unread"><span style="display:flex;align-items:flex-start">
+            <span class="dot" style="margin-top:4px"></span>
+            <span><span style="font-size:6.5pt;color:var(--weak)">할아버지 기기</span><br>
+            <b style="font-size:8pt">약을 안 꺼내셨어요</b></span></span>
+            <span style="font-size:6.5pt;color:var(--light)">08:05</span></div>
+          <div class="row-item row-unread"><span style="display:flex;align-items:flex-start">
+            <span class="dot" style="margin-top:4px"></span>
+            <span><span style="font-size:6.5pt;color:var(--weak)">할아버지 기기</span><br>
+            <b style="font-size:8pt">꺼내셨는데 아직 안 드셨어요</b></span></span>
+            <span style="font-size:6.5pt;color:var(--light)">8월 20일 08:08</span></div>
+          <div class="row-item"><span style="display:flex;align-items:flex-start">
+            <span class="dot dot-off" style="margin-top:4px"></span>
+            <span><span style="font-size:6.5pt;color:var(--weak)">할아버지 기기</span><br>
+            <span style="font-size:8pt">약을 안 꺼내셨어요</span></span></span>
+            <span style="font-size:6.5pt;color:var(--light)">8월 17일 08:05</span></div>
+        </div>
+        <div class="tabbar"><div>🗄 기기</div><div class="on">🔔 알림<span class="badge">2</span></div></div>
+      </div>
+      <div class="note" style="margin-top:6px;font-size:7pt">
+        안 읽은 항목 — <b>옅은 배경 + 왼쪽 빨간 점 + 굵은 글씨</b>.
+        색 하나에만 의존하지 않는다.
+      </div>
+    </div>
+
+    <div class="col-api">
+      <div class="ep">
+        <span class="m">GET</span><span class="u">/api/notifications?limit=30</span>
+        <span class="when">화면 열릴 때 · 당겨서 새로고침 · 30초 폴링</span>
+      </div>
+      <pre>{
+  <span class="ky">"notifications"</span>: [
+    { "id": "412", "device_id": "d3f1a2b4-...", "dose_id": "8821",
+      "type": "missed_not_dispensed", "message": "약을 안 꺼내셨어요",
+      "created_at": "2026-08-23T23:05:00Z", "read_at": null },
+    { "id": "409", "device_id": "d3f1a2b4-...", "dose_id": "8818",
+      "type": "missed_not_taken", "message": "꺼내셨는데 아직 안 드셨어요",
+      "created_at": "2026-08-19T23:08:00Z", "read_at": null }
+  ],
+  <span class="ky">"devices"</span>: [ { "...Device..." } ],   <span class="cm">// 별명 표시용</span>
+  <span class="ky">"doses"</span>:   [ { "...Dose..." } ],     <span class="cm">// 팝업이 씀</span>
+  <span class="ky">"unread_count"</span>: 2,
+  <span class="ky">"has_more"</span>: false
+}</pre>
+
+      <div class="note">
+        <b>화면 2 와 똑같은 패턴</b> — 배열을 나눠 주고 화면이
+        <code>device_id</code> / <code>dose_id</code> 로 짝을 맞춘다.<br>
+        <code>devices</code> 는 <b>이 목록에 등장하는 기기만</b> 온다 (전체 기기 목록이 아니다).
+        알림 3건이 모두 할아버지 기기 것이면 <code>devices</code> 는 1개다.
+      </div>
+
+      <div class="note">
+        <b>날짜 범위가 아니라 개수(<code>limit</code>)인 이유</b> — 알림은 드물게 쌓여
+        "최근 30일" 이 2건일 수도 있다. <b>요청 파라미터는 목록 성격에 맞춘다.</b>
+        (응답 모양은 그래도 동일하다)
+      </div>
+
+      <div class="ep" style="margin-top:10px">
+        <span class="m post">POST</span><span class="u">/api/notifications/:id/read</span>
+        <span class="when">항목을 탭했을 때 — <b>읽음 처리 + 팝업 열기</b>가 동시에 일어난다</span>
+      </div>
+      <pre><span class="cm">// 요청 본문 없음</span>
+
+<span class="cm">// 응답 200</span>
+{
+  <span class="ky">"notifications"</span>: [ { "...갱신된 Notification..." } ],
+  <span class="ky">"unread_count"</span>: 1
+}</pre>
+      <ul>
+        <li><b><code>unread_count</code> 를 같이 돌려주므로</b> 탭하는 즉시
+            하단 탭 배지가 정확한 숫자로 줄어든다. 목록 전체를 다시 안 불러도 된다</li>
+        <li>이미 읽은 알림에 또 보내도 <code>read_at</code> 은 <b>처음 값 그대로</b> 둔다</li>
+        <li>실패 — <code>403 FORBIDDEN</code>(내 알림이 아님) / <code>404 NOT_FOUND</code></li>
+      </ul>
+
+      <div class="note warn">
+        <b>★ 푸시(FCM)와 알림 목록은 별개다.</b>
+        푸시는 던지면 끝이라 사본이 남지 않는다(문자를 보내도 내 폰에 발신함이 생기지 않는 것과 같다).
+        그래서 화면 7 이 읽어갈 <b>알림 테이블이 서버에 따로</b> 필요하다.<br>
+        서버는 <code>missed</code> 판정을 받으면 <b>① 알림 테이블에 한 줄 저장</b>한다.
+        나중에 여기에 <b>② 푸시 발송</b> 한 줄만 추가하면 된다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 10 공용 팝업 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">10</span>
+    <h2 class="page-title">공용 팝업 — 복약 상세</h2>
+    <span class="page-sub">DoseDetailDialog.jsx · 화면 4·6·7 이 공유</span>
+  </div>
+
+  <div class="cols">
+    <div class="col-screen">
+      <div class="phone">
+        <div class="screen-body" style="background:rgba(0,0,0,.35)">
+          <div class="popup">
+            <h4>8월 20일 (목)</h4>
+            <div class="pr"><span style="color:var(--weak)">예정</span><b>08:00</b></div>
+            <div class="pr"><span style="color:var(--weak)">꺼냄</span><b>08:03</b></div>
+            <div class="pr"><span style="color:var(--weak)">복용</span><span style="color:#bbb">—</span></div>
+            <div class="pr"><span style="color:var(--weak)">상태</span>
+              <span class="chip c-warn">⚠ 꺼냈으나 미복용</span></div>
+            <div style="border-top:1px solid var(--border);margin:7px 0"></div>
+            <div style="display:flex;gap:4px">
+              <div class="btn btn-g" style="flex:1;margin:0">닫기</div>
+              <div class="btn btn-p" style="flex:1;margin:0">먹었어요로 표시</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="note" style="margin-top:6px;font-size:7pt">
+        <b>한 번 만들어 세 화면에서 재사용한다.</b>
+        상태를 App/store 가 들고 있어 화면 4·6·7 이 같은 팝업을 연다.
+      </div>
+    </div>
+
+    <div class="col-api">
+      <h5>열릴 때 — 서버를 부르지 않는다</h5>
+      <div class="note">
+        부모 화면이 <b>이미 들고 있는 <code>Dose</code> 객체</b>를 그대로 쓴다.
+        화면 4·6 은 <code>doses</code> 배열에서, 화면 7 은 <code>dose_id</code> 로 찾아 넘긴다.
+        <b>그래서 팝업 전용 API 가 없다.</b>
+      </div>
+
+      <h5>세 가지 모습</h5>
+      <table>
+        <tr><th style="width:34%">조건</th><th>보여주는 것</th></tr>
+        <tr><td><code>status === 'taken'</code></td><td>버튼 대신 <b>✓ 복용 완료 · 판정 근거</b><br>
+          (<code>taken_source</code> → 센서/카메라/보호자 직접 확인)</td></tr>
+        <tr><td><code>scheduled_at</code> 이 <b>미래</b></td><td>[먹었어요로 표시] 를 <b>감춘다</b><br>
+          "아직 복약 시각이 되지 않았습니다"</td></tr>
+        <tr><td>그 외 (놓침·진행중)</td><td>[닫기] [먹었어요로 표시]</td></tr>
+      </table>
+
+      <div class="ep" style="margin-top:10px">
+        <span class="m post">POST</span><span class="u">/api/doses/:id/taken</span>
+        <span class="when">[먹었어요로 표시] → 한 번 더 확인한 뒤 호출</span>
+      </div>
+      <pre><span class="cm">// 요청 본문 없음 — 무엇으로 바꿀지는 서버가 안다</span>
+<span class="cm">//   status='taken', taken_source='manual', taken_at=현재시각</span>
+
+<span class="cm">// 응답 200</span>
+{ <span class="ky">"doses"</span>: [ { "id": "8818", "status": "taken",
+              "taken_at": "2026-08-24T05:12:00Z",
+              "taken_source": "manual", ... } ] }</pre>
+
+      <h5>★ 처리 후 화면 갱신 — "갈아끼우기"</h5>
+      <pre>const { doses } = await res.json()
+const updated = doses[0]
+<span class="cm">// 화면이 들고 있는 배열에서 id 가 같은 것만 교체</span>
+setDoses(prev =&gt; prev.map(d =&gt; d.id === updated.id ? updated : d))</pre>
+      <div class="note">
+        <b>요청 1번.</b> 목록 전체를 다시 안 불러도 된다.
+        <b>이미 목록에 있는 항목을 제자리에서 바꾸는 것</b>이라 위치가 안 변한다 —
+        20일 칸은 여전히 20일 칸이고 내용만 ⚠ → ✓ 로 바뀐다.<br>
+        <b>화면 3(기기 등록)은 반대로 "다시 부르기" 를 골랐다.</b> 거기는
+        <b>새로 생긴 것</b>을 가나다순 어디에 넣을지 몰랐다.
+        <b>이미 있는 것을 바꾸는가 / 새로 생긴 것을 넣는가</b> 의 차이다.
+      </div>
+
+      <h5>실패 응답</h5>
+      <table>
+        <tr><th>HTTP</th><th>code</th><th>언제</th></tr>
+        <tr><td>400</td><td><code>DOSE_NOT_DUE</code></td><td>아직 오지 않은 복약 건</td></tr>
+        <tr><td>403</td><td><code>FORBIDDEN</code></td><td>그 복약 건의 기기가 내 것이 아님</td></tr>
+        <tr><td>404</td><td><code>NOT_FOUND</code></td><td>그런 복약 건 없음</td></tr>
+        <tr><td>409</td><td><code>ALREADY_TAKEN</code></td><td>이미 복용 처리됨</td></tr>
+      </table>
+      <div class="note warn">
+        <b>미래 복약 건은 서버도 막는다.</b> 화면이 버튼을 감추지만 <code>curl</code> 로
+        직접 보낼 수 있다. <b>화면을 못 믿는 게 서버의 기본자세.</b><br>
+        그리고 <b>수동 체크는 안전망이다</b> — 카메라 판정은 실제로 드셨는데 손목이
+        프레임 밖이면 못 잡는다. <b>미탐이 오탐보다 아프므로</b> 보호자가 고칠 길을 둔다.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 11 디바이스 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">11</span>
+    <h2 class="page-title">디바이스용 API</h2>
+    <span class="page-sub">라즈베리파이 5 ↔ 서버 · 화면 없음</span>
+  </div>
+
+  <div class="cols">
+    <div style="flex:0 0 92mm">
+      <h5>디바이스 동작 흐름</h5>
+      <pre>① 부팅 시·주기적으로 스케줄을 받아온다
+     GET /api/device/schedule
+
+② 복약 시각 도달 → 음성 안내
+     POST /api/device/events  status=notified
+
+③ 5분 내 IR 감지 없음
+     POST /api/device/events  status=missed
+     (dispensed_at 없음)
+
+④ IR 감지 → 카메라 켜기
+     POST /api/device/events  status=dispensed
+
+⑤ 카메라가 5분 내 복용 감지
+     POST /api/device/events  status=taken
+                              taken_source=camera
+   감지 못하면
+     POST /api/device/events  status=missed</pre>
+      <div class="note">
+        <b>5분 타이머는 디바이스가 잰다.</b> 서버는 판정하지 않고 보고를 받아 적기만 한다.<br>
+        서버가 재려면 계속 시계를 보는 크론이 필요해 복잡해지고,
+        <b>인터넷이 끊기면 음성 안내조차 못 하게 된다.</b>
+      </div>
+
+      <h5>인증 — 왜 API 키인가</h5>
+      <div class="note">
+        라즈베리파이에는 <b>브라우저도 사람도 없다.</b> 이메일/비밀번호를 입력할 수 없으므로,
+        공장에서 기기마다 <b>긴 문자열(API 키)을 심어두고</b> 그걸로 신분을 증명한다.<br>
+        <code>X-Device-Key: dk_9f8e7d6c5b4a3f2e...</code><br>
+        표준에 없는 헤더는 <code>X-</code> 로 시작하는 게 관례다.
+      </div>
+    </div>
+
+    <div style="flex:1;min-width:0">
+      <div class="ep">
+        <span class="m">GET</span><span class="u">/api/device/schedule</span>
+        <span class="when">부팅 시 · 주기적으로</span>
+      </div>
+      <pre>GET /api/device/schedule
+X-Device-Key: dk_9f8e7d6c5b4a...
+
+<span class="cm">// 응답 200</span>
+{
+  <span class="ky">"devices"</span>: [
+    { "id": "d3f1a2b4-...", "timezone": "Asia/Seoul" }
+  ],
+  <span class="ky">"medications"</span>: [
+    { "name": "혈압약", "dosage": "1정",
+      "time": "08:00", "days": [1, 3, 5] }
+  ]
+}</pre>
+      <ul>
+        <li>약 설정이 없으면 <code>"medications": []</code> → 아무 안내도 하지 않는다</li>
+        <li><b>Device 객체를 통째로 주지 않는다.</b>
+            별명·일련번호·환자 전화번호는 기기에게 <b>불필요한 노출</b>이다.
+            앱용 API 와 객체 모양을 공유하지 않는 유일한 자리</li>
+      </ul>
+
+      <div class="ep" style="margin-top:8px">
+        <span class="m post">POST</span><span class="u">/api/device/events</span>
+        <span class="when">★ 상태가 바뀔 때마다</span>
+      </div>
+      <pre>POST /api/device/events
+X-Device-Key: dk_9f8e7d6c5b4a...
+
+{
+  <span class="ky">"scheduled_at"</span>: "2026-08-23T23:00:00Z",   <span class="cm">// 어느 복약 건인지</span>
+  <span class="ky">"status"</span>:       "dispensed",
+  <span class="ky">"occurred_at"</span>:  "2026-08-23T23:03:12Z",   <span class="cm">// 실제로 일어난 시각</span>
+  <span class="ky">"taken_source"</span>: null
+}
+
+<span class="cm">// 응답 200</span>
+{ <span class="ky">"doses"</span>: [ { "...Dose..." } ] }</pre>
+
+      <div class="note warn">
+        <b>★ scheduled_at 으로 어느 복약 건인지 특정한다 — 가장 놓치기 쉬웠던 부분</b><br>
+        <b>디바이스는 <code>dose_id</code>(8821)를 말할 수 없다.</b> 그 번호는 DB 가 만든 것이고
+        스케줄 응답에 들어 있지도 않다. <b>병원 접수번호</b>와 같다 —
+        환자는 자기 번호를 모르지만 <b>"3시 예약이요"</b> 라고 말할 수 있다.<br>
+        그래서 파이가 계산할 수 있는 값으로 지목한다.
+        <code>device_id</code> 는 <b>API 키가 말해준다.</b><br>
+        <code>WHERE device_id = &lt;키에서 알아낸 기기&gt; AND scheduled_at = &lt;요청 값&gt;</code><br>
+        초안 <code>{ status, occurred_at, taken_source? }</code> 은 셋 다 "어느 건인지" 를
+        말해주지 않았다. 구현 단계에서 발견했으면 <b>디바이스 파이썬 코드까지</b> 고쳐야 했다.
+      </div>
+
+      <div class="note">
+        <b>occurred_at 이 따로 있는 이유</b> — 08:03 에 꺼냈는데 와이파이가 끊겨 11:00 에
+        보고가 도착할 수 있다. "받은 시각"(11:00)을 적으면 기록이 틀린다.
+        <b>서버는 받은 시각을 쓰지 않는다.</b> 오프라인 큐를 붙여 밀린 기록을 한꺼번에
+        보내도 시각이 안 어긋난다.
+      </div>
+      <ul>
+        <li>복약 건이 <b>아직 없으면 서버가 그때 만든다</b> — 미리 만들어두는 크론이 필요 없다</li>
+        <li><code>status=taken</code> 이면 <code>taken_source</code> 필수 (<code>ir</code>/<code>camera</code>)
+            · 실패 — <code>401 INVALID_DEVICE_KEY</code> / <code>400 VALIDATION_ERROR</code></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============ 12 접근 제어 ============ -->
+<div class="page">
+  <div class="page-head">
+    <span class="page-no">12</span>
+    <h2 class="page-title">접근 제어</h2>
+    <span class="page-sub">모든 API 공통 · 이 프로젝트의 심장</span>
+  </div>
+
+  <div class="cols">
+    <div style="flex:1">
+      <div class="note warn">
+        <b>요청한 보호자가 <code>user_devices</code> 에 그 기기와 연결돼 있는지 매번 확인한다.</b><br>
+        확인 없이 <code>device_id</code> 만 믿으면, 남의 id 를 넣어 보내는 것만으로
+        다른 사람의 복약 기록이 노출된다.
+      </div>
+
+      <h5>뚫리는 시나리오</h5>
+      <pre>보호자가 자기 앱에서 개발자도구를 열어
+
+  GET /api/devices/&lt;남의기기UUID&gt;/doses?from=...&amp;to=...
+  Authorization: Bearer &lt;자기 토큰&gt;
+
+를 보내면?
+
+  확인 없이 처리하면
+  → 남의 할아버지 복약 기록이 그대로 온다
+  → 화면 5 를 부르면 복용 시간을 바꿔버릴 수도 있다</pre>
+
+      <h5>원칙</h5>
+      <div class="note">
+        <b>누구인지는 토큰이 말하고, 무엇을 요청했는지는 URL 이 말한다.</b><br>
+        서버는 매번 <b>"이 토큰의 주인이 이 기기와 연결돼 있나"</b> 를
+        <code>user_devices</code> 에서 확인한다.
+      </div>
+
+      <pre>SELECT 1 FROM user_devices
+WHERE user_id   = '&lt;토큰에서 얻은 값&gt;'
+  AND device_id = '&lt;URL 의 :id&gt;';
+
+<span class="cm">// 없으면 403 FORBIDDEN</span></pre>
+
+      <h5>테이블 구조가 이걸 가능하게 한다</h5>
+      <pre>devices                    user_devices
+┌──────────────────┐      ┌────────────────────────┐
+│ id     d3f1      │◀─────│ user_id 아들  device d3f1│
+│ serial PB-2026-. │◀─────│ user_id 딸    device d3f1│
+└──────────────────┘      └────────────────────────┘
+                             두 줄이 있으면 둘이 같은 기기를 본다</pre>
+      <div class="note">
+        <code>devices.id</code> 는 <b>기기</b>를 가리키지 사람을 가리키지 않는다.
+        아들이 보든 딸이 보든 같은 값이고, <b>누가 요청했는지는 토큰이 말한다.</b><br>
+        사람별 구분은 <code>user_devices.user_id</code> 가 한다.
+      </div>
+    </div>
+
+    <div style="flex:1">
+      <h5>:id 가 기기가 아닌 API</h5>
+      <table>
+        <tr><th style="width:42%">API</th><th>확인할 것</th></tr>
+        <tr><td><code>POST /api/doses/:id/taken</code></td>
+            <td>그 복약 건의 <code>device_id</code> 를 꺼내서 <b>그 기기가 내 것인지</b><br>
+            <code>doses → devices → user_devices</code> 로 거슬러 올라간다</td></tr>
+        <tr><td><code>POST /api/notifications/:id/read</code></td>
+            <td>그 알림의 <code>user_id</code> 가 <b>나인지</b><br>
+            <code>notifications</code> 에 <code>user_id</code> 가 직접 있어 한 단계로 끝난다</td></tr>
+      </table>
+
+      <h5>403 vs 404</h5>
+      <table>
+        <tr><th style="width:18%">403</th><td><b>선택.</b> 디버깅이 쉽다 — "없는 건가 / 권한이 없는 건가" 가 구분된다</td></tr>
+        <tr><th>404</th><td>"그런 게 존재하는지" 조차 안 알려줘 더 안전하다는 견해도 있다</td></tr>
+      </table>
+      <div class="note">
+        이 프로젝트는 <b>등록코드라는 자물쇠가 따로 있어</b> 존재 여부 노출의 위험이 낮다고 보고
+        <code>403</code> 으로 통일한다.
+      </div>
+
+      <h5>디바이스도 같다</h5>
+      <div class="note">
+        <b>API 키에 묶인 기기의 데이터만</b> 읽고 쓸 수 있다.<br>
+        <code>POST /api/device/events</code> 의 <code>scheduled_at</code> 으로 복약 건을 찾을 때도
+        <b>"그 키의 기기" 로 범위를 좁혀서</b> 찾아야 한다.
+      </div>
+
+      <h5>구현 순서 (spec §9)</h5>
+      <table>
+        <tr><th style="width:12%">5단계</th><td><b>인증 없이</b> API 를 먼저 구현한다 (<code>user_id</code> 임시 하드코딩)</td></tr>
+        <tr><th>7단계</th><td>Supabase Auth + <b>이 접근 제어</b>를 붙인다</td></tr>
+      </table>
+      <div class="note">
+        <b>왜 인증을 나중에</b> — 인증부터 붙이면 버그가 났을 때
+        "내 로직이 틀린 건가 / 로그인이 안 된 건가" 를 구분할 수 없다.
+        <b>자물쇠는 문틀을 다 세운 다음에 단다.</b>
+      </div>
+
+      <h5>엔드포인트 전체 (10개)</h5>
+      <table>
+        <tr><th style="width:16%">메서드</th><th>경로</th><th style="width:22%">화면</th></tr>
+        <tr><td>GET</td><td><code>/api/devices</code></td><td>2</td></tr>
+        <tr><td>POST</td><td><code>/api/user-devices</code></td><td>3</td></tr>
+        <tr><td>GET</td><td><code>/api/devices/:id/doses</code></td><td><b>4 · 6</b></td></tr>
+        <tr><td>GET</td><td><code>/api/devices/:id/medications</code></td><td>5</td></tr>
+        <tr><td>PUT</td><td><code>/api/devices/:id/medications</code></td><td>5</td></tr>
+        <tr><td>GET</td><td><code>/api/notifications</code></td><td>7</td></tr>
+        <tr><td>POST</td><td><code>/api/notifications/:id/read</code></td><td>7</td></tr>
+        <tr><td>POST</td><td><code>/api/doses/:id/taken</code></td><td>공용 팝업</td></tr>
+        <tr><td>GET</td><td><code>/api/device/schedule</code></td><td>디바이스</td></tr>
+        <tr><td>POST</td><td><code>/api/device/events</code></td><td>디바이스</td></tr>
+      </table>
+      <div class="note" style="font-size:7pt">
+        <b>모든 화면이 열릴 때 요청 1번.</b> 화면 2 의 배지도
+        <code>GET /devices</code> 응답에 얹어 해결했다.
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

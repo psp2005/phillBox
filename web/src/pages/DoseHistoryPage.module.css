@@ -1,0 +1,75 @@
+.page {
+  min-height: 100vh;
+  background: var(--app-bg);
+}
+
+.rangeNote {
+  padding: 12px 16px 4px;
+  font-size: 13px;
+  color: var(--adm-color-weak);
+}
+
+.list {
+  background: var(--page-bg);
+}
+
+/* 항목 한 줄. 왼쪽=언제, 오른쪽=어떻게 됐나 */
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-bottom: 1px solid var(--adm-color-border);
+  background: var(--page-bg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:active {
+  background: var(--adm-color-fill-content);
+}
+
+.when {
+  min-width: 0;
+}
+
+.date {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--adm-color-text);
+}
+
+.scheduled {
+  margin-top: 2px;
+  font-size: 13px;
+  color: var(--adm-color-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.more {
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+}
+
+.endNote {
+  padding: 20px 16px 28px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--adm-color-light);
+}
+
+.stateBox {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.skeletonItem {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--adm-color-border);
+  background: var(--page-bg);
+}

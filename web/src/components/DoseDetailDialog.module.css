@@ -1,0 +1,88 @@
+.popup {
+  --border-radius: 14px;
+  --min-width: 300px;
+  --max-width: 340px;
+}
+
+.body {
+  padding: 20px 20px 16px;
+}
+
+.date {
+  margin: 0 0 16px;
+  font-size: 18px;
+  font-weight: 700;
+  text-align: center;
+  color: var(--adm-color-text);
+}
+
+.rows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 15px;
+}
+
+.label {
+  color: var(--adm-color-weak);
+  flex-shrink: 0;
+}
+
+.value {
+  font-weight: 600;
+  color: var(--adm-color-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 값이 없는 칸(아직 안 꺼냄 등)은 흐리게 — "—" 가 눈에 덜 띄게 */
+.empty {
+  color: var(--adm-color-light);
+  font-weight: 400;
+}
+
+.divider {
+  height: 1px;
+  background: var(--adm-color-border);
+  margin: 14px 0;
+}
+
+/* 이미 복용 완료된 건 — 버튼 대신 근거를 보여준다 */
+.doneBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #eaf9f1;
+  color: var(--adm-color-success);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 아직 오지 않은 복약 — 체크할 수 없다는 안내 */
+.futureNote {
+  padding: 12px;
+  border-radius: 10px;
+  background: var(--adm-color-fill-content);
+  color: var(--adm-color-weak);
+  font-size: 13px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.actions > * {
+  flex: 1;
+}

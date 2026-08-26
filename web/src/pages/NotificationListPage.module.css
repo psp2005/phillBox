@@ -1,0 +1,84 @@
+.list {
+  background: var(--page-bg);
+}
+
+.item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-bottom: 1px solid var(--adm-color-border);
+  background: var(--page-bg);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.item:active {
+  background: var(--adm-color-fill-content);
+}
+
+/* 안 읽은 알림은 옅은 배경으로 한 번 더 구분한다.
+   점(색)만으로 구분하면 색맹인 보호자가 놓친다 (spec §6.4 의 취지) */
+.unread {
+  background: #f5f9ff;
+}
+
+/* 왼쪽 빨간 점. 읽은 항목에서는 자리만 차지하고 투명하게 둔다 */
+.dot {
+  flex-shrink: 0;
+  width: 8px;
+  height: 8px;
+  margin-top: 7px;
+  border-radius: 50%;
+  background: var(--adm-color-danger);
+}
+
+.dotRead {
+  background: transparent;
+}
+
+.body {
+  flex: 1;
+  min-width: 0;
+}
+
+/* span 은 기본이 인라인이라 옆으로 이어 붙고 margin-top 도 안 먹는다.
+   block 으로 바꿔야 기기 이름과 문구가 두 줄로 나뉜다. */
+.deviceName {
+  display: block;
+  font-size: 13px;
+  color: var(--adm-color-weak);
+}
+
+.message {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+  color: var(--adm-color-text);
+}
+
+.unread .message {
+  font-weight: 700;
+}
+
+.time {
+  flex-shrink: 0;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--adm-color-light);
+  font-variant-numeric: tabular-nums;
+}
+
+.stateBox {
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.skeletonItem {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--adm-color-border);
+  background: var(--page-bg);
+}

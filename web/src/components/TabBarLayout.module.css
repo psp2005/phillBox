@@ -1,0 +1,26 @@
+.wrap {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--app-bg);
+}
+
+/* 하단 탭에 내용이 가리지 않도록 그만큼 아래를 비워 둔다.
+   env(safe-area-inset-bottom) = 아이폰 아래쪽 홈 바 영역 */
+.body {
+  flex: 1;
+  min-height: 0;
+  padding-bottom: calc(var(--tabbar-height) + env(safe-area-inset-bottom, 0px));
+}
+
+.tabbar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: var(--app-max-width);
+  background: var(--page-bg);
+  border-top: 1px solid var(--adm-color-border);
+  z-index: 100;
+}
