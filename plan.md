@@ -35,14 +35,19 @@ Vercel·Render·Supabase 연결은 **내용물이 없을 때 미리** 해둔다.
 
 ## 1. 주차별 계획
 
-### 0주차 (이번 주 남은 며칠) — 안전벨트
+### 0주차 — 안전벨트 ✅ **완료 (2026-08-26)**
 
 | 할 일 | 담당 |
 |---|---|
-| `git init` + `.gitignore` (`node_modules`, `.env` 제외) | 직접 타이핑 |
-| GitHub 저장소 생성 → 첫 푸시 | 직접 타이핑 |
+| ✅ `git init` + `.gitignore` (`node_modules`, `.env` 제외) | 직접 타이핑 |
+| ✅ GitHub 저장소 생성 → 첫 푸시 | 직접 타이핑 |
 
-**끝났다는 판정:** GitHub 웹페이지에서 `web/src/pages/`가 보인다.
+**저장소:** https://github.com/psp2005/phillBox (첫 커밋 `db1fee9`, 47개 파일)
+
+**겪은 것 — 다음에 다시 만나면:**
+- `web/` 안에서 먼저 `git init` 을 해버림 → `error: 'web/' does not have a commit checked out`. **`rm -rf web/.git`** 으로 해결. 저장소는 **프로젝트 루트**에 하나만 있어야 한다(`spec.md`·`server/`·`device/`가 코드와 같이 버전 관리돼야 하므로)
+- `git add .` 을 건너뛰고 `commit`·`push` → `error: src refspec main does not match any`. **커밋이 0개**라 보낼 게 없다는 뜻. `add`(장바구니) → `commit`(계산) → `push`(백업) 세 단계는 건너뛸 수 없다
+- `warning: LF will be replaced by CRLF` 는 **경고이지 오류가 아니다.** `core.autocrlf=true`(윈도우 권장값)가 줄바꿈을 자동 통일하는 중. 무시한다
 
 > **지금 백업이 하나도 없다.** 화면 7장이 이 폴더에만 있다. 시연 일정과 무관하게 최우선.
 > 깃은 Vercel 배포의 **전제 조건**이기도 하다(깃 푸시 → 자동 배포).
@@ -55,12 +60,16 @@ Vercel·Render·Supabase 연결은 **내용물이 없을 때 미리** 해둔다.
 
 | # | 할 일 | 담당 | 만나는 함정 |
 |---|---|---|---|
-| 1 | Vercel 연결 → `web/` 배포 | 함께 | **빌드 오류** |
-| 2 | `manifest.json` + 아이콘 2장 (`display: standalone`) | 퍼블 | — |
-| 3 | 폰에서 홈 화면에 추가 → 주소창 없이 열리는지 확인 | 직접 | iOS/안드로이드 설치 방법 차이 |
-| 4 | Supabase 프로젝트 생성 + 테이블 6개 SQL (`spec.md` §7) | 직접 타이핑 | **환경변수** |
+| 1 | ✅ Vercel 연결 → `web/` 배포 | 함께 | **빌드 오류** |
+| 2 | ✅ `manifest.json` + 아이콘 3장 (`display: standalone`) | 직접 | — |
+| 3 | ✅ 폰에서 홈 화면에 추가 → 주소창 없이 열리는지 확인 | 직접 | iOS/안드로이드 설치 방법 차이 |
+| 4 | ⏳ **Supabase 프로젝트 생성 + 테이블 6개 SQL** (`spec.md` §7) | 직접 타이핑 | **환경변수** |
 | 5 | `server/` 폴더 + Express 최소 서버(`GET /api/health` 하나) | 직접 타이핑 | — |
 | 6 | Render 연결 → 5번 배포 | 함께 | **환경변수** |
+
+**1~3 완료 (2026-08-26).** 배포 주소 https://phill-box.vercel.app
+- 아이콘 원본(`PhillBoxIcon.png`)에 **투명 배경처럼 보이는 회색 체크무늬가 실제 픽셀로 구워져 있었다.** 그대로 썼으면 홈 화면에 체크무늬 배경이 박혔을 것. 흰색으로 치환하고 로고를 80% 크기로 가운데 정렬(사방 10% = maskable 안전지대)해서 `icon-192` / `icon-512` / `apple-touch-icon`(180) 3장 생성
+- **iOS는 `manifest.json`의 아이콘을 홈 화면에 안 쓴다.** `<link rel="apple-touch-icon">` 를 따로 걸어야 한다
 
 **끝났다는 판정 (3개 다 되어야 함):**
 - 폰 홈 화면 아이콘 → 주소창 없이 목업 화면이 뜬다
@@ -68,6 +77,49 @@ Vercel·Render·Supabase 연결은 **내용물이 없을 때 미리** 해둔다.
 - 브라우저에서 Render 주소 + `/api/health` → `{"ok":true}`
 
 > **이 주가 끝나면 이미 시연이 가능하다.** 목업 데이터지만 "폰에 앱이 깔리고 화면이 돈다"까지는 보여줄 수 있다. 이게 **안전망**이다 — 이후 무엇이 실패해도 최소한 이건 남는다.
+
+#### Vercel 연결 절차 (2026-08-26 기준)
+
+**사전 확인 — 로컬 빌드부터.** `cd web && npm run build` 가 성공하는지 먼저 본다. 배포 실패 원인은 ①내 코드 ②배포 설정 둘 중 하난데, 로컬 빌드가 되면 ①이 지워진다.
+(2026-08-26 확인 완료 — `vite v8.2.1`, 869 modules, 5초, 성공)
+
+1. [vercel.com](https://vercel.com) → **Continue with GitHub** (별도 가입 없음)
+2. **Add New… → Project** → `phillBox` 옆 **Import**
+   (목록에 없으면 **Adjust GitHub App Permissions** 로 저장소 접근 권한 부여)
+3. **★ Root Directory 를 `web` 으로 변경** ← 유일하게 틀리기 쉬운 곳
+   - 기본값 `./` 로 두면 루트에서 `package.json` 을 못 찾아 실패한다. 우리 저장소는 루트에 문서가 있고 리액트 앱은 `web/` 안에 있다
+   - `web` 을 지정하면 Framework Preset 이 **Vite** 로 자동 인식되고 Build Command(`npm run build`) · Output Directory(`dist`) 도 자동으로 채워진다. **건드리지 않는다**
+4. **환경변수는 지금 비워둔다.** Supabase 키는 아직 없다
+5. **Deploy** (1~2분) → `phill-box-xxxx.vercel.app` 주소 발급
+
+**끝났다는 판정:**
+- PC 브라우저에서 그 주소 → 화면 1(로그인)이 뜬다
+- 폰에서 같은 주소 → **Wi-Fi 상관없이** 열린다 (`192.168.x.x` 와 달라진 점)
+- 폰에서 화면 3 전화번호 칸 → 숫자 키패드가 뜬다 (`type="tel"`)
+
+**이후로는 `git push` 만 하면 자동 배포된다.** 이게 이 단계의 진짜 이득이다 — 남은 4주 동안 코드를 고칠 때마다 진짜 폰에서 확인할 수 있다.
+
+#### 윈도우에서 만나는 함정 — PowerShell 실행 정책
+
+VSCode 터미널이 PowerShell 일 때 `npm` · `npx` 가 이렇게 막힐 수 있다:
+
+```
+npm.ps1 이 로드될 수 없습니다. 이 시스템에서 스크립트를 실행할 수 없으므로…
+```
+
+윈도우가 **서명 없는 스크립트 실행을 기본 차단**하기 때문이다. `npm` 은 윈도우에서 `npm.ps1` 이라는 스크립트로 동작해서 걸린다.
+
+해결은 둘 중 하나 (권장은 A):
+
+- **A. Git Bash 를 쓴다** — 실행 정책이 적용되지 않는다. 이 프로젝트의 깃 작업도 Git Bash 에서 했다.
+  VSCode 터미널 우측 `∨` → **Git Bash** 선택 (기본 터미널로 지정 가능)
+- **B. 현재 사용자만 정책 완화** — PowerShell 에서
+  ```powershell
+  Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+  ```
+  `RemoteSigned` = "내가 만든 스크립트는 실행, 인터넷에서 받은 것은 서명 필요". 관리자 권한이 필요 없고 시스템 전체를 열지 않는다.
+
+> **터미널이 두 종류라 명령 문법이 다르다.** 폴더 삭제가 Git Bash 는 `rm -rf web/.git`, PowerShell 은 `Remove-Item -Recurse -Force web\.git`. 안내받은 명령이 안 먹으면 **터미널 종류부터** 확인할 것.
 
 ---
 
@@ -103,6 +155,9 @@ Swagger(`swagger-jsdoc` + `swagger-ui-express`)는 **API 하나 만들 때마다
 | 할 일 | 담당 | 만나는 함정 |
 |---|---|---|
 | 라우터 붙이기 (`react-router`) | 직접 | **경로 문제** — Vercel에서 새로고침 시 404 → `vercel.json` rewrite |
+
+> **라우터가 없어서 지금 생기는 증상 (2026-08-26 확인)** — PWA 설치 후 **안드로이드 뒤로가기를 누르면 앱이 그냥 닫힌다.**
+> 화면 전환이 `App.jsx`의 `useState`로만 일어나 주소가 안 바뀌고, 그래서 브라우저 히스토리에 되돌아갈 칸이 쌓이지 않기 때문이다. 라우터를 붙이면 화면마다 주소가 생기고 히스토리가 쌓여 해결된다. **시연 전에는 반드시 해결돼 있어야 하는 항목.**
 | 목업 → `fetch`로 교체 (Zustand) | 직접 | **CORS** — Vercel ↔ Render 첫 통신 |
 | Supabase Auth 로그인 | 직접 | 토큰을 어디에 두나 (쿠키 vs 메모리) |
 | 접근 제어 (`spec.md` §8.5) | 직접 타이핑 | **★ 이 프로젝트의 심장** — 개념부터 설명 필요 |
