@@ -1,3 +1,4 @@
+F9zUrNeCXZtX4KN8
 # 복약기 프로젝트 — 화면/기능 명세 (MVP)
 
 > 작성 2026-08-13. 배포 구성은 `deployment-managed.md` 참고.
@@ -610,6 +611,11 @@ export default function DeviceListPage({ devices, loading, error, onSelectDevice
 > 등록코드가 기기 뒷면 스티커에만 있어(실물을 만져본 사람만 안다) 이렇게 열어도 안전하다. 더 엄격한 "첫 보호자가 승인" 방식은 §10.
 
 > **4단계 반영** — `devices`에 `serial_normalized` 컬럼을 추가한다. 컬럼에 함수를 씌우면(`UPPER(REPLACE(...))`) 인덱스를 못 쓴다.
+>
+> **단, 인덱스는 이 프로젝트 규모에서 진짜 이유가 아니다** (2026-08-27 재검토). 기기가 수백 대여도 전부 훑는 데 1ms가 안 걸린다. 컬럼을 두는 실제 이유는 두 가지다 —
+> ① **등록 실패는 시연의 첫 단추다.** 어르신·보호자가 스티커를 보고 손으로 치므로 `pb 2026 0001` 같은 입력이 나온다. 실패해도 사용자는 이유를 모른다(`SERIAL_NOT_FOUND` 만 보인다)
+> ② **나중에 넣으려면 기존 행을 다시 채워야 한다**(backfill). 지금 두는 게 싸다
+> 정규화 **동작**은 반드시 유지한다. 컬럼 없이 `upper(replace(...))` 로 비교해도 우리 규모에선 동일하게 동작하므로, 컬럼은 선택이다.
 
 #### 3. `GET /api/devices/:id/doses` — 복약 건 조회 (화면 4 **와** 화면 6 공용)
 
@@ -724,6 +730,20 @@ export default function DeviceListPage({ devices, loading, error, onSelectDevice
 ### 8.3 디바이스용 (기기 API 키 필요)
 
 **앱용 API와 객체 모양을 공유하지 않는다** — 기기가 자기 별명이나 환자 전화번호를 알 필요가 없다.
+
+> **★ 디바이스는 서버가 아니라 클라이언트다** (2026-08-27 확인 · 외부 강의자료 검토 결과)
+>
+> 라즈베리파이에 **Flask 웹 서버를 띄우는 방식은 쓰지 않는다.** 기기가 서버가 되려면 외부에서 접속 가능해야 하는데, 복약기는 **어르신 댁 공유기 안**에 있다 — 포트 포워딩·고정 IP가 필요하고(통신사가 안 주고 재부팅하면 바뀐다), 집 안 기기를 인터넷에 여는 것 자체가 위험하다.
+>
+> 기기는 **거는 쪽**이다. 파이썬에서 쓸 것은 `flask`가 아니라 **`requests`**.
+> ```python
+> requests.get(f"{SERVER}/api/device/schedule", headers={"X-Device-Key": API_KEY})
+> requests.post(f"{SERVER}/api/device/events", json={...}, headers={"X-Device-Key": API_KEY})
+> ```
+>
+> **MQTT도 쓰지 않는다.** 브로커(Mosquitto·HiveMQ 등)를 하나 더 띄워야 해 배포처가 늘고, Express가 HTTP·MQTT 두 가지를 다뤄야 한다. MQTT의 이점은 "센서 다수 × 초 단위 전송"에서 나오는데 우리는 **기기 1~2대 × 하루 3회**다. 무엇보다 **5분 타이머를 기기가 직접 재므로**(§4) 서버가 실시간으로 밀어줄 일이 없다. 망이 끊겼다 복구되는 문제는 `occurred_at`으로 이미 해결돼 있다(§11).
+>
+> 다만 강의자료의 **① 하드웨어 근거리 통신(GPIO·I2C·SPI)** 은 IR 센서 연결에 그대로 필요하다.
 
 #### `GET /api/device/schedule` — 스케줄 받아가기
 
