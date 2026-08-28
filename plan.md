@@ -134,7 +134,7 @@ npm.ps1 이 로드될 수 없습니다. 이 시스템에서 스크립트를 실�
 |---|---|---|
 | 1 | `GET /api/devices` | 첫 화면. 이거 하나면 화면 2가 산다 |
 | 2 | `GET /api/devices/:id/doses` | 화면 4·6 공용이라 **하나로 두 화면** |
-| 3 | `POST /api/doses/:id/taken` | 공용 팝업. 쓰기 API를 한 번 경험 |
+| 3 | `POST /api/doses/:id/taken` | 공용 팝업. 쓰기 API를 한 번 경험. **★ 만들기 전에 `spec.md` §8.2 8번의 "미해결" 상자를 먼저 읽을 것** — 기기가 꺼져 있으면 복약 건이 없어서 수동 체크가 불가능해지는 문제 |
 | 4 | `GET`·`PUT /api/devices/:id/medications` | 화면 5 |
 | 5 | `GET /api/notifications` + `POST .../read` | 화면 7 |
 | 6 | `POST /api/user-devices` | 화면 3. **409의 `user_id` 조건 주의**(`spec.md` §8.2) |
