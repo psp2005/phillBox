@@ -62,9 +62,16 @@ Vercel·Render·Supabase 연결은 **내용물이 없을 때 미리** 해둔다.
 | 1 | ✅ Vercel 연결 → `web/` 배포 | 함께 | **빌드 오류** |
 | 2 | ✅ `manifest.json` + 아이콘 3장 (`display: standalone`) | 직접 | — |
 | 3 | ✅ 폰에서 홈 화면에 추가 → 주소창 없이 열리는지 확인 | 직접 | iOS/안드로이드 설치 방법 차이 |
-| 4 | ⏳ **Supabase 프로젝트 생성 + 테이블 6개 SQL** (`spec.md` §7) | 직접 타이핑 | **환경변수** |
-| 5 | `server/` 폴더 + Express 최소 서버(`GET /api/health` 하나) | 직접 타이핑 | — |
+| 4 | ✅ Supabase 프로젝트 생성 + 테이블 5개 SQL (`spec.md` §7) | 직접 타이핑 | — |
+| 5 | ⏳ **`server/` 폴더 + Express 최소 서버**(`GET /api/health` 하나) | 직접 타이핑 | **환경변수** |
 | 6 | Render 연결 → 5번 배포 | 함께 | **환경변수** |
+
+**4 완료 (2026-08-29).** Supabase 프로젝트 `pillbox` (Northeast Asia · Seoul) — `https://ptloyqxytijidbwbmeco.supabase.co`
+- 프로젝트 생성 시 **`Automatically expose new tables` 를 껐다.** 켜두면 새 테이블이 anon 키로 접근 가능한 REST 주소에 자동 노출되는데, anon 키는 프론트엔드에 들어가 누구나 볼 수 있다 → 등록코드·기기 API 키·복약 기록이 통째로 샌다
+- 테이블마다 `enable row level security` 도 걸었다(정책은 0개 = 전면 차단). **잠금 2겹.** 우리 Express 서버는 `service_role` 신분이라 둘 다 통과한다
+- 테이블 5개: `devices` / `user_devices` / `medications` / `doses` / `notifications`. `users` 는 Supabase Auth가 관리하므로 만들지 않는다
+- **`medications.dose_time` 은 `time` 형(벽시계), `doses.scheduled_at` 은 `timestamptz`(UTC 순간).** 시간표와 출석부의 구분이 자료형에서 갈린다
+- **`notifications` 에 `message` 컬럼을 만들지 않았다.** 서버가 `type` 으로부터 만들어 내보낸다 → 문구를 고치면 과거 알림까지 함께 바뀐다
 
 **1~3 완료 (2026-08-26).** 배포 주소 https://phill-box.vercel.app
 - 아이콘 원본(`PhillBoxIcon.png`)에 **투명 배경처럼 보이는 회색 체크무늬가 실제 픽셀로 구워져 있었다.** 그대로 썼으면 홈 화면에 체크무늬 배경이 박혔을 것. 흰색으로 치환하고 로고를 80% 크기로 가운데 정렬(사방 10% = maskable 안전지대)해서 `icon-192` / `icon-512` / `apple-touch-icon`(180) 3장 생성

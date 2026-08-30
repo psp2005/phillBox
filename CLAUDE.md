@@ -96,8 +96,8 @@ Node.js 책의 아래 챕터를 **의도적으로 건너뛰었다.** "책에서 
 | **0주차 — 깃 + GitHub** | ✅ **2026-08-26 완료** — https://github.com/psp2005/phillBox |
 | **1주차 — Vercel 배포** | ✅ **2026-08-26 완료** — https://phill-box.vercel.app (Root Directory `web`, 깃 푸시 → 자동 배포) |
 | **1주차 — PWA 설치** | ✅ **2026-08-26 완료** — `public/manifest.json` + 아이콘 3장. 폰 홈 화면에서 **주소창 없이** 열리는 것 확인 |
-| **1주차 — Supabase + DB 테이블 (4단계)** | ⏳ **지금 여기** |
-| 1주차 — `server/` 최소 Express + Render 배포 | ⬜ |
+| **1주차 — Supabase + DB 테이블 (4단계)** | ✅ **2026-08-29 완료** — 프로젝트 `pillbox`(Seoul) + 테이블 5개. SQL 원본은 `server/sql/001_init.sql` |
+| **1주차 — `server/` 최소 Express + Render 배포** | ⏳ **지금 여기** |
 | 5 서버 API / 6 데이터 연결 / 7 인증 / 8 디바이스 | ⬜ |
 
 **알려진 미해결 항목:** 라우터가 없어서 **안드로이드 뒤로가기를 누르면 앱이 닫힌다.** 화면 전환이 `App.jsx`의 `useState`로만 일어나 히스토리가 안 쌓이기 때문. 3주차에 `react-router`로 해결 예정 (`plan.md`).
