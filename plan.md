@@ -63,8 +63,30 @@ Vercel·Render·Supabase 연결은 **내용물이 없을 때 미리** 해둔다.
 | 2 | ✅ `manifest.json` + 아이콘 3장 (`display: standalone`) | 직접 | — |
 | 3 | ✅ 폰에서 홈 화면에 추가 → 주소창 없이 열리는지 확인 | 직접 | iOS/안드로이드 설치 방법 차이 |
 | 4 | ✅ Supabase 프로젝트 생성 + 테이블 5개 SQL (`spec.md` §7) | 직접 타이핑 | — |
-| 5 | ⏳ **`server/` 폴더 + Express 최소 서버**(`GET /api/health` 하나) | 직접 타이핑 | **환경변수** |
-| 6 | Render 연결 → 5번 배포 | 함께 | **환경변수** |
+| 5 | ✅ `server/` 폴더 + Express 최소 서버(`GET /api/health` 하나) | 직접 타이핑 | **환경변수** |
+| 6 | ✅ Render 연결 → 5번 배포 | 함께 | — |
+
+### ✅ 1주차 완료 (2026-08-30)
+
+**5·6 완료.** 서버 주소 https://pillbox-server-wdjx.onrender.com
+
+**Render 설정 (다시 만들 일이 있으면)**
+
+| 항목 | 값 |
+|---|---|
+| 종류 | **Web Service** (Static Site 아님 — 우리 코드가 계속 살아 있어야 한다) |
+| Region | Singapore (무료 지역 중 한국에서 가장 가까움. 서울 없음) |
+| **Root Directory** | **`server`** |
+| Build Command | **`npm install`** ← 기본값이 `yarn` 이라 반드시 바꿀 것. 우리는 `package-lock.json`(npm)으로 관리한다 |
+| Start Command | **`npm start`** |
+| Compute | **$0/month Free** ← 기본이 $7 유료로 선택돼 있다 |
+
+**겪은 것 · 알아둘 것**
+- `const PORT = process.env.PORT || 3000` 이 핵심. **Render가 포트를 정해서 환경변수로 넣어준다**(실제로 `10000`이 들어왔다). `3000`으로 고정했으면 배포가 살아나지 않는다
+- `package.json` 의 `"start"` 스크립트 이름은 **Render가 찾는 약속된 이름**이다. 다른 이름이면 못 켠다
+- `"type": "module"` 이 없으면 `import` 문에서 `SyntaxError: Cannot use import statement outside a module`
+- Render가 쓰는 Node 버전은 자기 기본값(배포 당시 24.14.1). 로컬과 크게 다르면 나중에 "로컬은 되는데 배포는 안 됨"의 원인이 된다
+- **Vercel과 성격이 다르다.** Vercel은 빌드 결과 파일을 놓아두는 곳이고, Render는 **프로그램을 계속 켜두는 곳**이다. 그래서 Render만 콜드 스타트가 있다
 
 **4 완료 (2026-08-29).** Supabase 프로젝트 `pillbox` (Northeast Asia · Seoul) — `https://ptloyqxytijidbwbmeco.supabase.co`
 - 프로젝트 생성 시 **`Automatically expose new tables` 를 껐다.** 켜두면 새 테이블이 anon 키로 접근 가능한 REST 주소에 자동 노출되는데, anon 키는 프론트엔드에 들어가 누구나 볼 수 있다 → 등록코드·기기 API 키·복약 기록이 통째로 샌다

@@ -101,6 +101,19 @@ Render(server)의 환경변수:
 
 ---
 
+## 4.5 실제 배포 주소 (2026-08-30 기준)
+
+| | 주소 | Root Directory | 비고 |
+|---|---|---|---|
+| 프론트 (Vercel) | https://phill-box.vercel.app | `web` | 깃 푸시 → 자동 배포 |
+| 서버 (Render) | https://pillbox-server-wdjx.onrender.com | `server` | Web Service · Singapore · Free |
+| DB (Supabase) | https://ptloyqxytijidbwbmeco.supabase.co | — | 프로젝트 `pillbox` · Seoul |
+| GitHub | https://github.com/psp2005/phillBox | — | 저장소 하나에 web/·server/ (모노레포) |
+
+건강 확인: `https://pillbox-server-wdjx.onrender.com/api/health` → `{"ok":true}`
+
+---
+
 ## 5. Supabase 프로젝트 만들기 (한 번만)
 
 1. supabase.com → GitHub 계정으로 가입

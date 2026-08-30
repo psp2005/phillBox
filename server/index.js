@@ -5,7 +5,7 @@ const PORT = process.env.PORT || 3000 //우리가 배포할 Render 에서는 여
 //위 process는  Node.js가 자동으로 주는 객체, 지금 돌아가는 이 프로그램
 
 //서버가 살아있는지 확인하는 주소
-app.get('/app/health', (req, res)=>{
+app.get('/api/health', (req, res)=>{
     res.json({ok: true})
 })
 
