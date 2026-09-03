@@ -5,8 +5,41 @@ import {pool} from '../db.js'
 const router = express.Router()
 
 //7단계에서 인증을 붙이면 토큰에서 꺼낸다, 그때까지는 고정값
-const DEV_USER_ID = '08eaec4c-cc47-4d5f-b1a0-2fdc7608cbf1';
+const DEV_USER_ID = '08eaec4c-cc47-4d5f-b1a0-2fdc7608cbf1';//두 개의 복약기와 연결된 계정
+// const DEV_USER_ID = '3b72f89d-de4b-45f2-b2cf-eb0d19baa5ef'; //아무 기기랑 연결되지 않은 계정
 
+
+// 이 기기가 내 것인지 확인한다 (spec.md §8.5)
+// 통과하면 req.device 에 Device 정보를 담아 다음으로 넘긴다
+async function requireMyDevice(req, res, next) {
+  try {
+    const deviceId = req.params.id//req.params.id는 url의 :id 값
+
+    const mine = await pool.query(
+      `select d.id, d.serial, ud.nickname, ud.patient_phone, d.timezone
+         from user_devices ud
+         join devices d on d.id = ud.device_id
+        where ud.user_id = $1 and d.id = $2`,
+      [DEV_USER_ID, deviceId]
+    )
+
+    if (mine.rows.length === 0) {
+      const exists = await pool.query(
+        `select 1 from devices where id = $1`,
+        [deviceId]
+      )
+      return exists.rows.length > 0
+        ? res.status(403).json({ error: { message: '접근 권한이 없습니다' } })
+        : res.status(404).json({ error: { message: '기기를 찾을 수 없습니다' } })
+    }
+
+    req.device = mine.rows[0]
+    next()
+  } catch (err) {
+    console.error('기기 확인 실패:', err)
+    res.status(500).json({ error: { message: '서버 오류' } })
+  }
+}
 
 
 /**
@@ -92,6 +125,18 @@ router.get('/', async (req, res) => {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * @openapi
  * /api/devices/{id}/doses:
@@ -119,12 +164,13 @@ router.get('/', async (req, res) => {
  */
 
 // GET /api/devices/:id/doses — 복약 건 조회 (화면 4·6 공용)
-router.get('/:id/doses', async (req, res) => {
+router.get('/:id/doses', requireMyDevice, async (req, res) => {
   try {
-    const userId = DEV_USER_ID
-    const deviceId = req.params.id//req.params.id는 url의 :id 값
+    const deviceId = req.device.id
+    const tz = req.device.timezone
+    const { from, to } = req.query
     //req.query는 url의 ?뒤의 값
-    const { from, to } = req.query//구조분해할당 const from = req.query.from, const to = req.query.to로 정의하는거랑 같음
+    //구조분해할당 const from = req.query.from, const to = req.query.to로 정의하는거랑 같음
 
     if (!from || !to) {
       return res.status(400).json({//400은 validation_error로 정의했었음
@@ -132,29 +178,7 @@ router.get('/:id/doses', async (req, res) => {
       })
     }
 
-    // 1 내 기기인가? — 통과하면 Device 정보까지 get
-    const device = await pool.query(
-      `select d.id, d.serial, ud.nickname, ud.patient_phone, d.timezone
-         from user_devices ud
-         join devices d on d.id = ud.device_id
-        where ud.user_id = $1 and d.id = $2`,
-      [userId, deviceId]
-    )
-
-    if (device.rows.length === 0) {
-      // 기기 자체가 없는지, 남의 것인지 가른다
-      const exists = await pool.query(
-        `select 1 from devices where id = $1`,//select 1은 해당 행이 있으면 1을 출력하고, 없으면 없다
-        [deviceId]
-      )
-      return exists.rows.length > 0
-        ? res.status(403).json({ error: { message: '접근 권한이 없습니다' } })
-        : res.status(404).json({ error: { message: '기기를 찾을 수 없습니다' } })
-    }
-
-    const tz = device.rows[0].timezone
-
-    // 2 그 기간의 복약 건 — 기기 타임존 기준 날짜로 자른다
+    // 1. 그 기간의 복약 건 — 기기 타임존 기준 날짜로 자른다
     const doses = await pool.query(
       `select id, device_id, scheduled_at, status,
               notified_at, dispensed_at, taken_at, taken_source
@@ -165,7 +189,7 @@ router.get('/:id/doses', async (req, res) => {
       [deviceId, tz, from, to]
     )
 
-    // 3 약 설정 — 약 미설정 구분용
+    // 2. 약 설정 — 약 미설정 구분용
     const medications = await pool.query(
       `select id, device_id, name, dosage,
               to_char(dose_time, 'HH24:MI') as time,
@@ -178,7 +202,7 @@ router.get('/:id/doses', async (req, res) => {
     //HH24 : 24시간제
     //MI : 분
 
-    // 4 from 이전에 더 오래된 기록이 있는가 (화면 6의 '더보기')
+    // 3. from 이전에 더 오래된 기록이 있는가 (화면 6의 '더보기')
     const older = await pool.query(
       `select exists (
          select 1 from doses
@@ -189,13 +213,76 @@ router.get('/:id/doses', async (req, res) => {
     )//위 sql문을 보면 select exits(...) as has_more이라 되어있는데 PostgreSQL은 from없어도 select가 된다
 
     res.json({
-      devices: device.rows,
+      devices: [req.device],
       doses: doses.rows,
       medications: medications.rows,
       has_more: older.rows[0].has_more,
     })
   } catch (err) {
     console.error('GET /api/devices/:id/doses 실패:', err)
+    res.status(500).json({ error: { message: '서버 오류' } })
+  }
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @openapi
+ * /api/devices/{id}/medications:
+ *   get:
+ *     summary: 약 설정 조회 (화면 5)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: 성공. 미설정이면 medications 가 빈 배열 }
+ *       403: { description: 내 기기가 아님 }
+ *       404: { description: 기기 없음 }
+ */
+router.get('/:id/medications', requireMyDevice, async (req, res) => {
+  try {
+    const medications = await pool.query(
+      `select id, device_id, name, dosage,
+              to_char(dose_time, 'HH24:MI') as time,
+              days
+         from medications
+        where device_id = $1`,
+      [req.device.id]
+    )
+
+    res.json({
+      devices: [req.device],
+      medications: medications.rows,
+    })
+  } catch (err) {
+    console.error('GET /api/devices/:id/medications 실패:', err)
     res.status(500).json({ error: { message: '서버 오류' } })
   }
 })
