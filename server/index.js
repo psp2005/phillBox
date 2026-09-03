@@ -1,4 +1,6 @@
 import express from 'express'
+import swaggerUi from 'swagger-ui-express'
+import { swaggerSpec } from './swagger.js'
 import devicesRouter from './routes/devices.js'
 
 
@@ -9,9 +11,15 @@ const PORT = process.env.PORT || 3000 //우리가 배포할 Render 에서는 여
 //위 process는  Node.js가 자동으로 주는 객체, 지금 돌아가는 이 프로그램
 
 
+
 app.get('/api/health', (req, res) => {
-  res.json({ ok: true })
+    res.json({ ok: true })
 })
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
+//app.use(경로, 미들웨어1, 미들웨어2) — 미들웨어를 두 개 이어서 넘기는 형태
+//swaggerUi.serve — 화면에 필요한 CSS·JS 파일들을 제공
+//swaggerUi.setup(swaggerSpec) — 우리 명세로 화면을 그림
 
 app.use('/api/devices', devicesRouter);
 
