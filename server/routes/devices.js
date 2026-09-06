@@ -287,4 +287,109 @@ router.get('/:id/medications', requireMyDevice, async (req, res) => {
   }
 })
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @openapi
+ * /api/devices/{id}/medications:
+ *   put:
+ *     summary: 약 설정 저장 (화면 5)
+ *     description: 기기당 1줄이므로 항상 덮어쓰기. 두 번 눌러도 결과가 같다.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:   { type: string, example: '혈압약' }
+ *               dosage: { type: string, example: '1정' }
+ *               time:   { type: string, example: '08:00' }
+ *               days:   { type: array, items: { type: integer }, example: [1, 3, 5] }
+ *     responses:
+ *       200: { description: 저장됨 }
+ *       400: { description: 입력값 오류 }
+ *       403: { description: 내 기기가 아님 }
+ *       404: { description: 기기 없음 }
+ */
+router.put('/:id/medications', requireMyDevice, async (req, res) => {
+  try {
+    const { name, dosage, time, days } = req.body
+
+    // 입력값 검사 (spec.md §8.2 5번)
+    if (!name?.trim()) {
+      return res.status(400).json({ error: { message: '약 이름을 입력해 주세요' } })
+    }
+    if (!dosage?.trim()) {
+      return res.status(400).json({ error: { message: '용량을 입력해 주세요' } })
+    }
+    if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(time ?? '')) {
+      //.test(값)은 해당 값이 "이 규칙에 맞나?"를 true/false로 돌려줌
+      //??는 앞이 null/undefined이면 뒤를 써라라는 뜻
+      //||은 앞이 빈문자열,0,false이면 뒤를 써라라는 뜻이라서 여기선 ??을 사용
+      return res.status(400).json({ error: { message: '복용 시각을 확인해 주세요' } })
+    }
+    if (!Array.isArray(days) || days.length === 0) {
+      return res.status(400).json({ error: { message: '복용 요일을 하나 이상 선택해 주세요' } })
+    }
+    if (!days.every((d) => Number.isInteger(d) && d >= 0 && d <= 6)) {
+      //배열.every(...) 는 해당 배열의 모든 값이 ...조건에 맞나 확인 - map/filter와 같은 배열 메서드
+      return res.status(400).json({ error: { message: '복용 요일 값이 올바르지 않습니다' } })
+    }
+
+    //"insert ...on conflict ... do update"는 속칭upsert(update+insert : 없으면 넣고, 이미 있으면 고친다)기능이다
+    // medications.device_id 에 unique 제약이 있어서(sql/001_init.sql) 그냥 insert 하면 두 번째 저장부터 에러가 난다
+    const saved = await pool.query(
+      `insert into medications (device_id, name, dosage, dose_time, days)
+       values ($1, $2, $3, $4, $5)
+       on conflict (device_id) do update set   -- device_id는 unique를 설정했으니 이미 저장된 기기면 conflict가 난다, 그때는 do update set (내용을 갱신)하라는 뜻
+         name       = excluded.name,  -- excluded = 방금 넣으려다 막힌 새 값
+         dosage     = excluded.dosage,
+         dose_time  = excluded.dose_time,
+         days       = excluded.days,
+         updated_at = now() -- 이것만 새 값이 아니라 '지금 시각', excluded.updated_at으로 하면 안됨
+       returning id, device_id, name, dosage,
+                 to_char(dose_time, 'HH24:MI') as time,
+                 days`,
+      [req.device.id, name.trim(), dosage.trim(), time, days]
+    )
+    /*
+    1.front화면에서 만약 저장(insert/update)만하는 PUT요청을 통해 테이블 속 값들을 추가/갱신하고나면
+    front화면에도 요청이 적용된 값을 나타내기위해 다시 GET요청을 해야한다
+    2.만약 front에서 2번 요청하는게 싫다면 PUT요청에 대한 응답에 결과를 담아보내면 된다
+    응답에 결과를 담으려면 다시 select한 값을 위 saved변수에 집어넣어야 하는데(SQL문에서 insert·update는 rowCount(처리한 줄 수)만 주고 결과값을 안 돌려주므로)
+    postgreSQL의 편리기능인 returning은 insert나 update한 결과를 바로 받는 기능으로
+    따로 select할 필요없이 편하게 추가/갱신된 테이블값을 saved에 바로 넣어서 응답으로 보낼 수 있다
+    */
+    res.json({ medications: saved.rows })
+  } catch (err) {
+    console.error('PUT /api/devices/:id/medications 실패:', err)
+    res.status(500).json({ error: { message: '서버 오류' } })
+  }
+})
+
 export default router
