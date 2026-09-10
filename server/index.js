@@ -2,7 +2,7 @@ import express from 'express'
 import swaggerUi from 'swagger-ui-express'
 import { swaggerSpec } from './swagger.js'
 import devicesRouter from './routes/devices.js'
-
+import notificationsRouter from './routes/notifications.js'
 
 // console.log('환경변수 테스트:', process.env.TEST_VALUE)
 
@@ -26,6 +26,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 //swaggerUi.setup(swaggerSpec) — 우리 명세로 화면을 그림
 
 app.use('/api/devices', devicesRouter);
+app.use('/api/notifications', notificationsRouter);
 
 app.listen(PORT, ()=>{
     console.log(`서버 실행중 - http://localhost:${PORT}`)
