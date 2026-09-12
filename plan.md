@@ -162,12 +162,27 @@ npm.ps1 이 로드될 수 없습니다. 이 시스템에서 스크립트를 실�
 
 | 순서 | API | 왜 이 순서 |
 |---|---|---|
-| 1 | ✅ `GET /api/devices` | 첫 화면. 이거 하나면 화면 2가 산다 — **2026-09-02 완료** (로컬·Render 양쪽 확인) |
-| 2 | `GET /api/devices/:id/doses` | 화면 4·6 공용이라 **하나로 두 화면** |
-| 3 | `POST /api/doses/:id/taken` | 공용 팝업. 쓰기 API를 한 번 경험. **★ 만들기 전에 `spec.md` §8.2 8번의 "미해결" 상자를 먼저 읽을 것** — 기기가 꺼져 있으면 복약 건이 없어서 수동 체크가 불가능해지는 문제 |
-| 4 | `GET`·`PUT /api/devices/:id/medications` | 화면 5 |
-| 5 | `GET /api/notifications` + `POST .../read` | 화면 7 |
-| 6 | `POST /api/user-devices` | 화면 3. **409의 `user_id` 조건 주의**(`spec.md` §8.2) |
+| 1 | ✅ `GET /api/devices` | 첫 화면. 이거 하나면 화면 2가 산다 |
+| 2 | ✅ `GET /api/devices/:id/doses` | 화면 4·6 공용이라 **하나로 두 화면** |
+| 3 | ✅ `GET`·`PUT /api/devices/:id/medications` | 화면 5 |
+| 4 | ✅ `GET /api/notifications` + `POST .../read` | 화면 7 |
+| 5 | ✅ **`POST /api/devices/:id/doses/taken`** | 공용 팝업. **경로가 `POST /api/doses/:id/taken` 에서 바뀌었다** — 아래 참고 |
+| 6 | ✅ `POST /api/user-devices` | 화면 3 |
+
+### ✅ 2주차 앱용 API 8개 완료 (2026-09-12)
+
+**만들면서 정한 것**
+
+- **`requireMyDevice` 미들웨어로 접근 제어를 한 곳에 모았다.** 라우트마다 복사하면 API를 늘리다 한 곳에서 빼먹기 쉽다. 미들웨어는 **붙이는 걸 잊으면 아예 동작을 안 해서** 즉시 발견된다
+- **`POST /api/doses/:id/taken` → `POST /api/devices/:id/doses/taken` 로 경로를 바꿨다** (2026-09-11). 복약 건 `id` 대신 **기기 + `scheduled_at`** 으로 지목하고, 행이 없으면 `on conflict` 로 그때 만든다. 기기가 꺼져 있던 날도 수동 체크가 가능해진다. 이유와 비용은 `spec.md` §8.2 8번
+  - 덤으로 접근 제어가 2단계에서 **기기 한 단계**로 짧아져 `requireMyDevice` 를 그대로 쓴다
+  - 화면에서 **빈 칸도 탭 가능하게** 하는 작업은 §10으로 미뤘다. 서버는 이미 받아준다
+- **오류 형식(`{ error: { type, code, message } }`)은 `server/errors.js` 의 `fail()` 로 통일한다.** `code` 만 주면 `type` 을 표에서 찾아 채우므로 **둘이 어긋날 수 없다**. `POST /api/user-devices` 부터 적용했고, **나머지 라우트는 아직 `{ error: { message } }` 라 통일이 남아 있다**
+- **`on conflict` 를 세 곳에서 썼다** — `PUT medications`(덮어쓰기) · `POST doses/taken`(없으면 생성) · `POST user-devices`(중복이면 409). 전부 **확인과 실행을 한 문장으로 묶어** 경쟁 조건을 없애는 목적
+
+**아직 안 한 것**
+- 디바이스용 2개(`GET /api/device/schedule`, `POST /api/device/events`)는 **4주차**. 파이썬 코드와 함께 만드는 게 빠르다
+- `try`/`catch` 중복을 중앙 에러 미들웨어로 옮기는 정리
 
 Swagger(`swagger-jsdoc` + `swagger-ui-express`)는 **API 하나 만들 때마다 그 자리에서** 주석으로 적는다. 몰아서 하면 안 한다.
 

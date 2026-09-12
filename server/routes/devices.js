@@ -392,4 +392,101 @@ router.put('/:id/medications', requireMyDevice, async (req, res) => {
   }
 })
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @openapi
+ * /api/devices/{id}/doses/taken:
+ *   post:
+ *     summary: 수동 복용 처리 (공용 팝업)
+ *     description: 복약 건이 없으면 그때 만든다. scheduled_at 은 "어느 건이냐"를 가리키는 값.
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: string }
+ *         description: 기기 UUID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               scheduled_at: { type: string, example: '2026-09-09T23:00:00Z' }
+ *     responses:
+ *       200: { description: 갱신된 복약 건 }
+ *       400: { description: scheduled_at 오류 또는 아직 오지 않은 건 }
+ *       403: { description: 내 기기가 아님 }
+ *       404: { description: 기기 없음 }
+ *       409: { description: 이미 복용 처리됨 }
+ */
+router.post('/:id/doses/taken', requireMyDevice, async (req, res) => {
+  try {
+    const deviceId = req.device.id
+    const { scheduled_at: scheduledAt } = req.body
+    //구조분해할당 - scheduled_at은 받는 이름, scheduleAt은 스크립트에서 사용할 이름
+    //const {scheduled_at} = req.body로 해도 된다. 
+
+    if (!scheduledAt) {
+      return res.status(400).json({ error: { message: 'scheduled_at 을 지정해 주세요' } })
+    }
+
+    const when = new Date(scheduledAt)
+    if (Number.isNaN(when.getTime())) {
+      return res.status(400).json({ error: { message: 'scheduled_at 형식이 올바르지 않습니다' } })
+    }
+
+    // 미래 복약 건은 서버도 막는다 (화면을 못 믿는 게 서버의 기본자세)
+    if (when.getTime() > Date.now()) {
+      return res.status(400).json({ error: { message: '아직 복용할 시간이 되지 않았습니다' } })
+    }
+
+    // 이미 복용 처리된 건인가
+    const found = await pool.query(
+      `select status from doses where device_id = $1 and scheduled_at = $2`,
+      [deviceId, scheduledAt]
+    )
+    if (found.rows[0]?.status === 'taken') {
+      return res.status(409).json({ error: { message: '이미 복용 처리된 복약 건입니다' } })
+    }
+
+    // 없으면 만들고, 있으면 고친다
+    const saved = await pool.query(
+      `insert into doses (device_id, scheduled_at, status, taken_at, taken_source)
+       values ($1, $2, 'taken', now(), 'manual')
+       on conflict (device_id, scheduled_at) do update set
+         status       = 'taken',
+         taken_at     = now(),
+         taken_source = 'manual'
+       returning id, device_id, scheduled_at, status,
+                 notified_at, dispensed_at, taken_at, taken_source`,
+      [deviceId, scheduledAt]
+    )
+
+    res.json({ doses: saved.rows })
+  } catch (err) {
+    console.error('POST /api/devices/:id/doses/taken 실패:', err)
+    res.status(500).json({ error: { message: '서버 오류' } })
+  }
+})
+
 export default router

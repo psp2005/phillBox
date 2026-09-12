@@ -98,8 +98,28 @@ Node.js 책의 아래 챕터를 **의도적으로 건너뛰었다.** "책에서 
 | **1주차 — PWA 설치** | ✅ **2026-08-26 완료** — `public/manifest.json` + 아이콘 3장. 폰 홈 화면에서 **주소창 없이** 열리는 것 확인 |
 | **1주차 — Supabase + DB 테이블 (4단계)** | ✅ **2026-08-29 완료** — 프로젝트 `pillbox`(Seoul) + 테이블 5개. SQL 원본은 `server/sql/001_init.sql` |
 | **1주차 — `server/` 최소 Express + Render 배포** | ✅ **2026-08-30 완료** — https://pillbox-server-wdjx.onrender.com/api/health → `{"ok":true}` |
-| **2주차 — 서버 API 8개 + Swagger (5단계)** | ⏳ **지금 여기.** 인증 없이, `user_id` 하드코딩 |
-| 6 데이터 연결 / 7 인증 / 8 디바이스 | ⬜ |
+| **2주차 — 앱용 서버 API 8개 + Swagger (5단계)** | ✅ **2026-09-12 완료.** 인증 없이 `DEV_USER_ID` 하드코딩 · `/api-docs` 에서 전부 시험 가능 |
+| **3주차 — 화면 연결 + 인증 (6·7단계)** | ⏳ **지금 여기** |
+| 8 디바이스 (파이썬 + 디바이스용 API 2개) | ⬜ 4주차 |
+
+**서버 구조 (2026-09-12)**
+
+```
+server/
+├─ index.js              app.use 로 라우터를 끼우는 목차
+├─ db.js                 pg 연결 풀 (Session pooler + ssl)
+├─ errors.js             fail(res, status, code, message) — type 은 표에서 자동
+├─ swagger.js            @openapi 주석을 읽어 /api-docs 생성
+├─ sql/                  001_init.sql (스키마) · dev_seed.sql (개발용 데이터)
+└─ routes/
+   ├─ devices.js         5개 + requireMyDevice 미들웨어 (§8.5 접근 제어)
+   ├─ notifications.js   2개
+   └─ user_devices.js    1개
+```
+
+- **접근 제어는 `requireMyDevice` 한 곳에서만** 한다. 통과하면 `req.device` 에 Device 정보를 담아 넘기므로 라우트에서 다시 조회하지 않는다
+- **`POST /api/devices/:id/doses/taken`** — 명세의 원래 경로(`POST /api/doses/:id/taken`)에서 바뀌었다. 이유는 `spec.md` §8.2 8번
+- **오류 형식 통일이 남아 있다.** `user_devices.js` 만 `fail()` 을 쓰고 나머지는 `{ error: { message } }`
 | **(곁가지) 라즈베리파이 실물 셋업** | 🔶 **2026-09-04 — SSH 접속 + IR센서→LED 예행연습까지 완료.** 상세는 `plan.md` 4주차 "라즈베리파이 실물 셋업" |
 
 **라즈베리파이 (2026-09-04 기준)** — `ssh academy@192.168.0.8` (호스트명 `pillbox`. **`.local` 이름은 WSL에서 안 되니 IP를 쓴다**)

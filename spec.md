@@ -554,7 +554,7 @@ export default function DeviceListPage({ devices, loading, error, onSelectDevice
 | 5 | PUT | `/api/devices/:id/medications` | 5 |
 | 6 | GET | `/api/notifications` | 7 |
 | 7 | POST | `/api/notifications/:id/read` | 7 |
-| 8 | POST | `/api/doses/:id/taken` | 공용 팝업 |
+| 8 | POST | `/api/devices/:id/doses/taken` | 공용 팝업 |
 
 > **경로의 `:id`는 UUID(`Device.id`)다. `serial`이 아니다.**
 > `serial`은 `PB-2026-0001`처럼 순차적이라 URL에 쓰면 옆 번호를 찍어볼 수 있다.
@@ -720,28 +720,39 @@ export default function DeviceListPage({ devices, loading, error, onSelectDevice
 - 이미 읽은 알림에 또 보내도 **`read_at`은 처음 값 그대로 둔다**
 - 실패 : `403 FORBIDDEN`(내 알림이 아님) / `404 NOT_FOUND`
 
-#### 8. `POST /api/doses/:id/taken` — 수동 복용 처리 (공용 팝업)
+#### 8. `POST /api/devices/:id/doses/taken` — 수동 복용 처리 (공용 팝업)
+
+> **★ 2026-09-11 변경.** 원래는 `POST /api/doses/:id/taken` 이었다. 아래 "왜 바꿨나" 참고.
 
 ```json
-// 요청 본문 없음
+// 요청
+{ "scheduled_at": "2026-09-09T23:00:00Z" }
+
 // 응답 200
 { "doses": [ { "...갱신된 Dose..." } ] }
 ```
 
-- 서버가 `status='taken'`, `taken_source='manual'`, `taken_at=현재시각`으로 갱신한다. 무엇으로 바꿀지는 서버가 알므로 요청 본문이 없다
-- **바뀐 복약 건을 돌려주므로** 그 한 건만 갈아끼우면 화면 4·6·7이 갱신된다. 같은 팝업을 세 화면이 공유하므로, 어느 화면에서 눌렀든 id가 같은 항목만 교체하면 된다
+- **`:id`는 기기 UUID다.** 복약 건이 아니라 **기기 + 예정시각**으로 지목한다
+- `scheduled_at` 은 **"어느 복약 건이냐"** 를 가리키는 값이다. `taken_at`(실제 처리 시각)과 혼동하지 말 것 — 그건 서버가 `now()`로 채운다
+- 서버가 `status='taken'`, `taken_source='manual'`, `taken_at=현재시각`으로 갱신한다
+- **해당 복약 건이 없으면 그때 만든다** (`on conflict (device_id, scheduled_at)`). 디바이스 이벤트 처리(§8.3)와 같은 방식
+- **바뀐 복약 건을 돌려주므로** 그 한 건만 갈아끼우면 화면 4·6·7이 갱신된다
 - **미래 복약 건은 서버도 막는다.** 화면이 버튼을 감추지만 **화면을 못 믿는 게 서버의 기본자세**다
-- 실패 : `400 DOSE_NOT_DUE` / `403 FORBIDDEN` / `404 NOT_FOUND` / `409 ALREADY_TAKEN`
+- 실패 : `400 VALIDATION_ERROR`(`scheduled_at` 누락·형식 오류) / `400 DOSE_NOT_DUE` / `403 FORBIDDEN` / `404 DEVICE_NOT_FOUND` / `409 ALREADY_TAKEN`
 
-> **★ 미해결 — 5단계에서 이 API를 만들 때 반드시 결론 낼 것** (2026-08-28 발견, 4단계 테이블 설계 중)
->
-> **문제**: 복약 건은 미리 만들지 않고 **디바이스가 보고할 때 생긴다**(§8.3). 그런데 기기가 꺼져 있거나 인터넷이 끊기면 **그날 `doses` 행이 아예 안 생긴다.** 그러면 보호자 화면에는 "⏳ 예정"만 남고, **수동 체크도 못 한다** — 이 API는 `:id`로 이미 존재하는 건을 찾기 때문이다(공용 팝업도 부모 화면이 들고 있는 dose를 쓴다).
->
-> **왜 아픈가**: §3의 원칙이 *"미탐이 오탐보다 아프다 → 보호자의 수동 체크가 안전망"* 인데, **하필 기기가 죽었을 때 그 안전망이 안 펴진다.** 가장 필요한 순간에 없는 셈이다.
->
-> **해결 방향**: `:id`로 찾는 대신 **`(device_id, scheduled_at)` 으로 지정하고, 없으면 그때 만든다.** `doses` 에 `unique (device_id, scheduled_at)` 이 이미 있으므로 `on conflict ... do update` 한 문장으로 된다. 디바이스 이벤트 처리(§8.3)와 같은 방식이다.
->
-> **테이블 설계는 이미 준비돼 있다.** 4단계에서 손댈 것 없음. 바뀌는 것은 **API 경로/요청 모양과 화면 팝업이 무엇을 들고 있느냐**뿐이다.
+**왜 `:id`(복약 건)에서 기기+예정시각으로 바꿨나** (2026-09-11 결정)
+
+복약 건은 미리 만들지 않고 **디바이스가 보고할 때 생긴다**(§8.3). 그런데 **기기가 꺼져 있던 날은 `doses` 행이 아예 안 생긴다.** 그러면 화면에는 "⏳ 예정"만 남고 **수동 체크도 못 한다** — 옛 방식은 `:id`로 이미 존재하는 건을 찾기 때문이다.
+
+§3의 원칙이 *"미탐이 오탐보다 아프다 → 보호자의 수동 체크가 안전망"* 인데, **하필 기기가 죽었을 때 그 안전망이 안 펴졌다.**
+
+**바꾼 비용은 거의 없었다.**
+- 서버: `update` → `insert ... on conflict do update`. `doses` 에 `unique (device_id, scheduled_at)` 이 이미 있어 한 문장
+- 화면: 팝업이 이미 `Dose` 객체를 통째로 들고 있어(§8.4) `dose.id` 대신 `dose.device_id`·`dose.scheduled_at` 을 꺼내면 된다
+- **덤**: 접근 제어가 `doses → devices → user_devices` 2단계에서 **기기 한 단계**로 짧아졌다. 다른 기기 라우트와 같은 미들웨어를 쓴다
+
+**"빈 칸도 탭할 수 있게" 하는 화면 작업은 §10으로 미뤘다.** 서버가 이미 받아주므로 화면만 나중에 켜면 된다.
+
 
 ---
 
@@ -815,7 +826,7 @@ export default function DeviceListPage({ devices, loading, error, onSelectDevice
 | 5 약 설정 | `GET /devices/:id/medications` | `PUT /devices/:id/medications` |
 | 6 복약 기록 | `GET /devices/:id/doses?from=&to=` | 같은 API로 [더 보기] |
 | 7 알림 목록 | `GET /notifications` | `POST /notifications/:id/read` |
-| 공용 팝업 | 없음 (부모 화면이 이미 들고 있는 dose를 씀) | `POST /doses/:id/taken` |
+| 공용 팝업 | 없음 (부모 화면이 이미 들고 있는 dose를 씀) | `POST /devices/:id/doses/taken` |
 
 **모든 화면이 열릴 때 요청 1번이다.** 화면 2의 배지도 `GET /devices` 응답에 얹어 해결했다.
 
@@ -833,7 +844,7 @@ export default function DeviceListPage({ devices, loading, error, onSelectDevice
 
 | API | 확인할 것 |
 |---|---|
-| `POST /api/doses/:id/taken` | 그 복약 건의 `device_id`를 꺼내서, 그 기기가 내 것인지 (`doses` → `devices` → `user_devices`) |
+| `POST /api/devices/:id/doses/taken` | **경로의 기기가 내 것인지** (2026-09-11 경로 변경으로 한 단계가 됐다. 예전에는 `doses` → `devices` → `user_devices` 2단계였다) |
 | `POST /api/notifications/:id/read` | 그 알림의 `user_id`가 나인지 (`notifications`에 `user_id`가 직접 있으므로 한 단계) |
 
 **남의 것이면 `403`을 준다.** `404`를 주면 "그런 게 존재하는지"조차 안 알려줘 더 안전하다는 견해도 있지만, 이 프로젝트는 등록코드라는 자물쇠가 따로 있어 존재 여부 노출의 위험이 낮고, 디버깅이 쉬운 `403`으로 통일한다.
@@ -930,6 +941,7 @@ UNIQUE (user_id, device_id)
 | 알림 종류 세분화·통계 | 이미 남기고 있는 시각 3개로 계산 가능 | — |
 | **별명·전화번호 수정** | `PATCH /api/user-devices/:device_id` 1개 + 화면 4에 팝업 1개. 접근 제어는 `user_devices`의 **내 줄 하나**만 보면 되므로 §8.5 검사 중 가장 단순 | 등록할 때 한 번 입력하면 대개 안 바꾼다. 오타가 나도 **`tel:`은 다이얼러를 열 뿐 자동으로 걸지 않아** 번호를 보고 취소하면 그만이고, 보호자별 값이라 남에게 번지지도 않는다 |
 | 공동 관리 승인 | 두 번째 보호자가 등록하면 첫 보호자에게 승인 요청 | 등록코드가 기기 실물 스티커에만 있어 아무나 붙을 수 없다. 승인 흐름은 화면과 상태가 늘어 비싸다 |
+| **화면 4의 빈 칸도 탭 가능하게** | 복약 건 행이 없는 날짜 칸을 탭하면, `medications` 의 `time`·`days` 로 `scheduled_at` 을 계산해 `POST /api/devices/:id/doses/taken` 을 보낸다 | **서버는 2026-09-11에 이미 받아주게 만들었다**(§8.2 8번). 화면만 켜면 된다. 기기가 **꺼져 있던 날**의 수동 체크가 가능해진다 — 다만 그런 날은 음성 안내도 안 나갔으므로 발생 빈도가 낮다고 보고 미룬다 |
 | **DB 연결의 인증서 검증 켜기** | `server/db.js` 의 `ssl: { rejectUnauthorized: false }` 를 Supabase CA 인증서 등록으로 바꾼다 | **암호화는 이미 켜져 있고, 꺼둔 것은 "상대가 진짜 Supabase인지 확인하는" 부분뿐이다.** Supabase 인증서를 컴퓨터가 아는 기관이 발급하지 않아, 검증을 켜려면 인증서 파일을 받아 Render에도 올려야 한다. 통신 경로가 데이터센터 간이라 중간자 공격 위험이 낮다고 보고 미룬다 (2026-08-30 판단) |
 
 ---
