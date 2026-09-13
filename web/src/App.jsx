@@ -32,10 +32,9 @@ import {
 
 /*
 안드로이드 백버튼 이슈는 "돌아올 이유 있는 경우만 history에 쌓는다"는 방향으로 해결
-1.안으로 들어가는 경우 - history에 쌓기
-2.뒤로가기 - nigate(-1) 
-3. 로그인/등록완료...등 완료하기 작업 - {replace : true}
-4.기기목록/알림목록 단순 하단 탭 전환 - - {replace : true}
+1.배너 탭/약설정/기기등록...등 안으로 들어가는 작업 - history에 쌓기
+2.[뒤로] · [취소] · 등록/저장 완료..등 되돌아 나오는 경우 - navigate(-1)
+3.로그인/로그아웃/하단 탭 전환...등 - {replace : true}
 */
 
 
@@ -76,7 +75,7 @@ function DeviceRegisterScreen() {
       onSubmit={(values) => {
         console.log('등록 요청:', values)
         Toast.show({ icon: 'success', content: '기기를 등록했습니다' })
-        navigate('/devices', {replace: true})
+        navigate(-1)
       }}
       onCancel={() => navigate(-1)}
     />
@@ -134,7 +133,7 @@ function MedicationScreen() {
       onSave={(values) => {
         console.log('약 설정 저장:', values)
         Toast.show({ icon: 'success', content: '저장했습니다' })
-        navigate(`/devices/${id}`, {replace: true})
+        navigate(-1)
       }}
       onBack={() => navigate(-1)}
     />
