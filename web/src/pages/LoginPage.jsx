@@ -30,7 +30,7 @@ export default function LoginPage({ loading, error, onLogin, onSignup }) {
       <div className={styles.brand}>
         <div className={styles.logo}>💊</div>
         <h1 className={styles.title}>복약기</h1>
-        <p className={styles.subtitle}>부모님의 복약을 함께 챙깁니다</p>
+        <p className={styles.subtitle}>가족의 건강을 함께 챙깁니다</p>
       </div>
 
       {error && <p className={styles.error}>{error}</p>}

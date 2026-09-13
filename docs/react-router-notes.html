@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>화면 전환은 어떻게 일어나는가 — useState 방식과 react-router</title>
+<style>
+  @page { size: A4 portrait; margin: 14mm 14mm; }
+
+  :root {
+    --primary: #1677ff;
+    --accent:  #00b578;
+    --text:    #222;
+    --weak:    #555;
+    --light:   #888;
+    --border:  #e5e5e5;
+    --line:    #ccc;
+    --bg:      #f7f7f7;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Malgun Gothic', -apple-system, sans-serif;
+    font-size: 10pt;
+    line-height: 1.6;
+    color: var(--text);
+    background: #fff;
+  }
+
+  code, pre { font-family: Consolas, 'D2Coding', monospace; }
+
+  h1 {
+    font-size: 16pt;
+    margin: 0 0 4px;
+    border-bottom: 2px solid var(--text);
+    padding-bottom: 6px;
+  }
+  .subtitle { color: var(--light); font-size: 9pt; margin-bottom: 18px; }
+
+  h2 {
+    font-size: 13pt;
+    margin: 22px 0 8px;
+    padding-left: 8px;
+    border-left: 4px solid var(--primary);
+  }
+  h3 {
+    font-size: 11pt;
+    margin: 14px 0 6px;
+    color: var(--weak);
+  }
+
+  p { margin: 6px 0; }
+
+  pre {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 9px 11px;
+    font-size: 8.6pt;
+    line-height: 1.5;
+    overflow-x: auto;
+    margin: 8px 0;
+    white-space: pre;
+  }
+
+  p code, li code, td code {
+    background: var(--bg);
+    border-radius: 3px;
+    padding: 1px 4px;
+    font-size: 9pt;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 9.4pt;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 6px 9px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--bg); font-weight: 700; }
+
+  .note {
+    background: #f0f7ff;
+    border-left: 4px solid var(--primary);
+    padding: 9px 12px;
+    margin: 10px 0;
+    font-size: 9.4pt;
+  }
+  .note b { color: var(--primary); }
+
+  .warn {
+    background: #fff7e6;
+    border-left: 4px solid #ff8f1f;
+    padding: 9px 12px;
+    margin: 10px 0;
+    font-size: 9.4pt;
+  }
+
+  ul { margin: 6px 0; padding-left: 20px; }
+  li { margin: 3px 0; }
+
+  .page-break { page-break-before: always; }
+
+  hr { border: 0; border-top: 1px solid var(--border); margin: 18px 0; }
+</style>
+</head>
+<body>
+
+<h1>화면 전환은 어떻게 일어나는가</h1>
+<div class="subtitle">복약기 프로젝트 · useState 방식과 react-router · 2026-09-12</div>
+
+<h2>1. 지금은 이렇게 화면이 바뀝니다</h2>
+
+<p><b>주소는 하나도 안 바뀝니다.</b> 실제 코드로 보겠습니다.</p>
+
+<h3>상태 하나가 "지금 어느 화면인지"를 기억합니다</h3>
+<pre>const [screen, setScreen] = useState('login')      // App.jsx:47</pre>
+
+<h3>그 값에 따라 다른 컴포넌트를 그립니다</h3>
+<pre>if (screen === 'login')      { return &lt;LoginPage ... /&gt; }           // 70번 줄
+if (screen === 'register')   { return &lt;DeviceRegisterPage ... /&gt; }  // 144번 줄
+if (screen === 'device')     { return &lt;DeviceDetailPage ... /&gt; }    // 160번 줄
+if (screen === 'medication') { ... }                                // 176번 줄</pre>
+
+<h3>버튼을 누르면 그 값을 바꿉니다</h3>
+<pre>onAddDevice={() =&gt; setScreen('register')}         // 119번 줄
+onOpenMedication={() =&gt; setScreen('medication')}  // 168번 줄
+onBack={() =&gt; setScreen('devices')}               // 170번 줄</pre>
+
+<h3>일어나는 일을 순서대로</h3>
+<pre>① [+ 등록] 클릭
+      ↓
+② setScreen('register')
+      ↓
+③ 리액트가 "상태가 바뀌었네" 하고 App 을 다시 그림
+      ↓
+④ if (screen === 'register') 가 참이 됨
+      ↓
+⑤ &lt;DeviceRegisterPage /&gt; 가 그려짐</pre>
+
+<p><b>브라우저는 아무것도 모릅니다.</b> 주소창은 그대로고, 히스토리에도 아무것도 안 쌓입니다.</p>
+
+<div class="note">
+<b>비유</b> — 화이트보드 한 장에 그림을 <b>지우고 다시 그리는</b> 것과 같습니다.
+방을 옮긴 게 아니라 <b>같은 자리에서 내용만 바꾼</b> 거죠.
+그래서 "뒤로"라는 개념 자체가 없습니다.
+</div>
+
+<hr>
+
+<h2>2. react-router — 라이브러리가 맞습니다</h2>
+
+<p>npm 패키지입니다. <code>express</code> 나 <code>pg</code> 처럼 남이 만들어둔 코드 뭉치예요.</p>
+
+<p>하는 일은 <b>딱 두 가지</b>입니다.</p>
+
+<pre>① 주소를 바꾼다 (그리고 히스토리에 쌓는다)
+② 지금 주소에 맞는 컴포넌트를 그린다</pre>
+
+<p>②는 지금 <code>if (screen === ...)</code> 가 하던 일과 같습니다.
+<b>판단 기준이 <code>screen</code> 상태에서 주소로 바뀔 뿐</b>이에요.</p>
+
+<hr>
+
+<h2>3. 브라우저 기능을 빌려오는 것이 맞습니다</h2>
+
+<h3>브라우저가 원래 갖고 있는 것</h3>
+
+<table>
+  <tr><th style="width:26%">무엇</th><th>설명</th></tr>
+  <tr><td><b>주소창</b></td><td>지금 어느 주소인지</td></tr>
+  <tr><td><b>히스토리</b></td><td>뒤로·앞으로 갈 수 있는 목록</td></tr>
+</table>
+
+<p>이 둘을 자바스크립트로 조작하는 <b>표준 기능</b>이 브라우저에 들어 있습니다.
+<b>History API</b> 라고 부릅니다.</p>
+
+<pre>history.pushState(null, '', '/devices')
+   └─ 주소를 /devices 로 바꾸고, 히스토리에 한 칸 쌓는다</pre>
+
+<p><code>react-router</code> 는 <b>이걸 감싼 것</b>입니다. 직접 써도 되지만 번거롭습니다.</p>
+
+<h3>pushState 의 핵심 — 서버에 안 물어봅니다</h3>
+
+<pre>&lt;a href="/devices"&gt;        →  서버에 새 요청  →  페이지 전체 다시 로드
+                                                  → 화면 깜빡임
+                                                  → 리액트 상태 전부 초기화
+
+history.pushState(...)     →  주소만 바뀜      →  요청 없음
+                                                  → 깜빡임 없음
+                                                  → 상태 그대로</pre>
+
+<p><b>주소만 살짝 갈아끼우는</b> 겁니다. 화면은 리액트가 알아서 다시 그립니다.</p>
+
+<div class="note">
+<b>비유</b> — 호텔 방문의 <b>호수 팻말만 바꿔 다는</b> 것과 같습니다.
+손님을 다른 방으로 옮기는 게 아니라, <b>같은 방의 팻말을 바꾸고 안을 다시 꾸미는</b> 거예요.
+짐(상태)을 안 옮겨도 됩니다.
+</div>
+
+<p>이렇게 <b>페이지를 새로 안 불러오면서 여러 화면처럼 보이게</b> 만든 앱을
+<b>SPA(Single Page Application)</b> 라고 부릅니다.
+우리 앱이 그것입니다 — 실제 HTML 파일은 <code>index.html</code> <b>한 장뿐</b>이에요.</p>
+
+<h3>뒤로가기는 브라우저가 알려줍니다</h3>
+
+<pre>window.addEventListener('popstate', ...)
+   └─ 사용자가 뒤로·앞으로를 눌렀을 때 알림이 옴</pre>
+
+<p><code>react-router</code> 가 이걸 듣고 있다가 <b>주소에 맞는 컴포넌트로 바꿔 그립니다.</b></p>
+
+<p><b>그래서 안드로이드 뒤로가기가 동작합니다</b> — 하드웨어 버튼이든 화면 제스처든,
+결국 브라우저의 "뒤로"를 부르고, 그게 <code>popstate</code> 로 전달됩니다.</p>
+
+<div class="page-break"></div>
+
+<h2>4. 정리 — 무엇이 바뀌나</h2>
+
+<table>
+  <tr>
+    <th style="width:26%"></th>
+    <th style="width:37%">지금</th>
+    <th style="width:37%">라우터 이후</th>
+  </tr>
+  <tr>
+    <td><b>화면을 정하는 것</b></td>
+    <td><code>screen</code> 상태</td>
+    <td><b>주소</b></td>
+  </tr>
+  <tr>
+    <td><b>화면을 바꾸는 것</b></td>
+    <td><code>setScreen('register')</code></td>
+    <td><code>navigate('/devices/new')</code></td>
+  </tr>
+  <tr>
+    <td><b>주소창</b></td>
+    <td>안 바뀜</td>
+    <td>바뀜</td>
+  </tr>
+  <tr>
+    <td><b>히스토리</b></td>
+    <td>안 쌓임</td>
+    <td>쌓임 → <b>뒤로가기 동작</b></td>
+  </tr>
+  <tr>
+    <td><b>새로고침하면</b></td>
+    <td>로그인으로 돌아감</td>
+    <td><b>그 화면 유지</b></td>
+  </tr>
+  <tr>
+    <td><b>화면 컴포넌트 7장</b></td>
+    <td>그대로</td>
+    <td><b>그대로</b></td>
+  </tr>
+</table>
+
+<p><b>마지막 줄이 중요합니다.</b>
+<code>DeviceListPage</code> · <code>DeviceDetailPage</code> 같은 화면 파일들은 <b>거의 안 건드립니다.</b>
+바뀌는 건 <code>App.jsx</code> 하나예요 — <b>화면을 고르는 방식만</b> 갈아끼우는 거니까요.</p>
+
+<hr>
+
+<h2>5. 미리 알아둘 함정 — 배포하면 404</h2>
+
+<pre>주소창에 https://phill-box.vercel.app/devices 를 직접 입력
+   ↓
+브라우저가 Vercel 에 "devices 라는 파일 주세요" 라고 요청
+   ↓
+Vercel: "그런 파일 없는데요"  →  404</pre>
+
+<p><code>pushState</code> 로 만든 주소는 <b>브라우저 안에만 있는 가짜 주소</b>입니다.
+서버에는 그런 파일이 없어요.</p>
+
+<div class="warn">
+<b>언제 터지나</b> — 화면 안에서 버튼으로 이동할 때는 멀쩡합니다.
+<b>새로고침하거나 주소를 직접 입력할 때</b> 진짜로 서버에 요청이 가고, 그때 404가 납니다.
+</div>
+
+<p><b>해결은 한 줄입니다</b> — <i>"어떤 주소로 오든 <code>index.html</code> 을 주라"</i> 고
+Vercel 에 알려주면 됩니다. (<code>vercel.json</code> 의 rewrite 설정)</p>
+
+<hr>
+
+<h2>작업 순서</h2>
+
+<table>
+  <tr><th style="width:14%">단계</th><th>할 일</th></tr>
+  <tr><td><b>1단계</b></td><td><code>BrowserRouter</code> + <code>Routes</code> 로 껍데기를 만든다 — 화면 1·2만 연결</td></tr>
+  <tr><td><b>2단계</b></td><td>나머지 화면 5장을 붙인다 + <code>useParams</code> 로 기기 id 꺼내기</td></tr>
+  <tr><td><b>3단계</b></td><td>하단 탭(화면 2·7)을 중첩 라우트로 정리</td></tr>
+  <tr><td><b>4단계</b></td><td><code>vercel.json</code> 으로 배포 404 막기</td></tr>
+</table>
+
+<p style="color:var(--light); font-size:9pt; margin-top:14px;">
+각 단계마다 동작을 확인하고 넘어간다. 한 번에 다 바꾸면 어디서 깨졌는지 찾기 어렵다.
+</p>
+
+<h3>주소 설계</h3>
+
+<table>
+  <tr><th style="width:10%">화면</th><th style="width:40%">주소</th><th>무엇</th></tr>
+  <tr><td>1</td><td><code>/login</code></td><td>로그인</td></tr>
+  <tr><td>2</td><td><code>/devices</code></td><td>기기 목록</td></tr>
+  <tr><td>3</td><td><code>/devices/new</code></td><td>기기 등록</td></tr>
+  <tr><td>4</td><td><code>/devices/:id</code></td><td>기기 상세</td></tr>
+  <tr><td>5</td><td><code>/devices/:id/medications</code></td><td>약 설정</td></tr>
+  <tr><td>6</td><td><code>/devices/:id/history</code></td><td>복약 기록</td></tr>
+  <tr><td>7</td><td><code>/notifications</code></td><td>알림 목록</td></tr>
+</table>
+
+<p>API 경로와 비슷하게 맞췄습니다. <code>/devices/:id</code> 를 보면
+<code>GET /api/devices/:id/doses</code> 를 부르면 되겠구나 싶죠.</p>
+
+</body>
+</html>

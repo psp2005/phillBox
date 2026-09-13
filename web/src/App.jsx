@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import {Routes, Route, Navigate, useNavigate, useParams, useLocation, Outlet} from 'react-router'
 import { Toast } from 'antd-mobile'
 import DoseDetailDialog from './components/DoseDetailDialog.jsx'
 import TabBarLayout from './components/TabBarLayout.jsx'
@@ -17,192 +18,265 @@ import {
   mockWeek,
 } from './mocks/data.js'
 
-/**
- * spec §6.3 규칙 3 — 데모용 화면 전환은 여기 useState 하나로 처리한다.
- * 나중에 라우터로 바꿀 때도 이 파일만 고치면 된다.
- *
- * 규칙 1 — 목업 데이터 주입도 전부 여기서만 한다.
- * 화면 컴포넌트는 데이터가 어디서 왔는지 모른다.
- */
+/*
+맨 처음에 목업 데이터로, 화면 퍼블리싱까지 확인하기위해
+같은 이름의 ~~~Screen()컴포넌트와 ~~~Page()컴포넌트를 따로 두는 한 겹이 더 있는 구조로 시작함
+목업데이터 사용대신 api연결한 후에도 이 구조는 유지
+~Page()컴포넌트는 실제 화면그리기용이고
+~Screen()은 데이터들을 API로부터 받아와 1:1대응되는 ~Page()의 props로 넣어주는 껍데기 역할임
+*/
 
-/**
- * 퍼블리싱 확인용 스위치.
- * 값을 바꿔서 로딩/오류/비어있음 화면을 눈으로 확인할 수 있다. (spec §6.2)
- * 데이터 연결 단계에서 통째로 지운다.
- */
-const DEMO = {
-  loading: false,
-  error: null, // 예: '네트워크 연결을 확인해 주세요'
-  empty: false, // true → 기기 0대
-  formError: null, // 예: '등록코드가 일치하지 않습니다' (화면 3·5 상단 띠)
-  noMedication: false, // true → 약 미설정 (화면 4 빈 화면, 화면 5 빈 폼)
-  noNotifications: false, // true → 알림 0건
-  hasMoreHistory: true, // 화면 6 하단 [더 보기] 버튼 보이기
-}
 
-/** 알림에서 복약 건을 찾을 때 쓰는 표 (화면 7 → 공용 팝업) */
-const ALL_DOSES = [...mockWeek, ...mockDoses]
 
-export default function App() {
-  const [screen, setScreen] = useState('login')
-  const [selectedDeviceId, setSelectedDeviceId] = useState(null)
-
-  // 공용 팝업이 보여줄 복약 건. null 이면 팝업이 닫혀 있다.
-  // 화면 4·6·7 이 모두 이 상태 하나를 쓴다. (spec §5 공용 팝업)
-  const [detailDose, setDetailDose] = useState(null)
-
-  // 목업이 상수라 읽음 처리를 흉내내기 위한 임시 상태.
-  // 데이터 연결 단계에서 POST /api/notifications/:id/read 로 대체된다.
-  const [readIds, setReadIds] = useState([])
-
-  const devices = DEMO.empty ? [] : mockDevices
-  const selectedDevice = devices.find((d) => d.id === selectedDeviceId) ?? null
-  const week = DEMO.noMedication ? [] : mockWeek
-
-  const notifications = DEMO.noNotifications
-    ? []
-    : mockNotifications.map((n) =>
-        readIds.includes(n.id) ? { ...n, read_at: new Date().toISOString() } : n,
-      )
-  const unreadCount = notifications.filter((n) => !n.read_at).length
-
-  // 화면 1은 팝업이 필요 없으므로 따로 뺀다
-  if (screen === 'login') {
-    return (
+function LoginScreen(){
+    const navigate = useNavigate()
+    return(
       <LoginPage
         loading={false}
         error={null}
-        onLogin={() => setScreen('devices')}
-        onSignup={() => setScreen('devices')}
+        onLogin={() => navigate('/devices')}
+        onSignup={() => navigate('/devices')}
       />
     )
   }
 
+function DeviceListScreen(){
+  const navigate = useNavigate()
+  return (
+    <DeviceListPage
+      devices={mockDevices}
+      loading={false}
+      error={null}
+      onSelectDevice={(id) => navigate(`/devices/${id}`)}
+      onAddDevice={() => navigate('/devices/new')}
+      onRefresh={() => {}}
+      onLogout={() => navigate('/login')}
+    />
+  )
+}
+
+// DeviceRegisterPage({ loading, error, onSubmit, onCancel })
+function DeviceRegisterScreen() {
+  const navigate = useNavigate()
+  return (
+    <DeviceRegisterPage
+      loading={false}
+      error={null}
+      onSubmit={(values) => {
+        console.log('등록 요청:', values)
+        Toast.show({ icon: 'success', content: '기기를 등록했습니다' })
+        navigate('/devices')
+      }}
+      onCancel={() => navigate('/devices')}
+    />
+  )
+}
+
+// DeviceDetailPage({ device, week, loading, error,
+//                    onSelectDose, onOpenMedication, onOpenHistory, onBack })
+function DeviceDetailScreen() {
+  const navigate = useNavigate()
+  const { id } = useParams()//라우트 주소 url에서 값을 꺼내옴, 
+  const device = mockDevices.find((d) => d.id === id) ?? null
+  const [detailDose, setDetailDose] = useState(null)
+
   return (
     <>
-      {renderScreen()}
+      <DeviceDetailPage
+        device={device}
+        week={mockWeek}
+        loading={false}
+        error={null}
+        onSelectDose={setDetailDose}
+        onOpenMedication={() => navigate(`/devices/${id}/medications`)}
+        onOpenHistory={() => navigate(`/devices/${id}/history`)}
+        onBack={() => navigate('/devices')}
+      />
 
       <DoseDetailDialog
         dose={detailDose}
         visible={!!detailDose}
         marking={false}
         onClose={() => setDetailDose(null)}
-        onMarkTaken={(doseId) => {
-          // 목업 단계라 목록의 상태는 바뀌지 않는다.
-          // 데이터 연결 단계에서 POST /api/doses/:id/taken 로 바뀔 자리.
-          console.log('수동 복용 처리:', doseId)
+        onMarkTaken={() => {
           Toast.show({ icon: 'success', content: '복용으로 기록했습니다' })
           setDetailDose(null)
         }}
       />
     </>
   )
+}
 
-  function renderScreen() {
-    // --- 하단 탭이 있는 화면 (2, 7) ---
-    if (screen === 'devices' || screen === 'notifications') {
-      return (
-        <TabBarLayout
-          activeKey={screen}
-          unreadCount={unreadCount}
-          onChange={setScreen}
-        >
-          {screen === 'devices' ? (
-            <DeviceListPage
-              devices={devices}
-              loading={DEMO.loading}
-              error={DEMO.error}
-              onSelectDevice={(id) => {
-                setSelectedDeviceId(id)
-                setScreen('device')
-              }}
-              onAddDevice={() => setScreen('register')}
-              onRefresh={() => {}}
-              onLogout={() => setScreen('login')}
-            />
-          ) : (
-            <NotificationListPage
-              notifications={notifications}
-              loading={DEMO.loading}
-              error={DEMO.error}
-              onRefresh={() => {}}
-              onSelectNotification={(n) => {
-                // 탭 한 번에 두 가지가 일어난다: 읽음 처리 + 공용 팝업 (spec §5 화면 7)
-                setReadIds((prev) =>
-                  prev.includes(n.id) ? prev : [...prev, n.id],
-                )
-                const dose = ALL_DOSES.find((d) => d.id === n.dose_id)
-                if (dose) setDetailDose(dose)
-              }}
-            />
-          )}
-        </TabBarLayout>
-      )
-    }
 
-    // --- 화면 3 ---
-    if (screen === 'register') {
-      return (
-        <DeviceRegisterPage
-          loading={DEMO.loading}
-          error={DEMO.formError}
-          onSubmit={(values) => {
-            console.log('등록 요청:', values)
-            Toast.show({ icon: 'success', content: '기기를 등록했습니다' })
-            setScreen('devices')
-          }}
-          onCancel={() => setScreen('devices')}
-        />
-      )
-    }
+// MedicationPage({ medication, deviceName, saving, error, onSave, onBack })
+function MedicationScreen() {
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const device = mockDevices.find((d) => d.id === id) ?? null
 
-    // --- 화면 4 ---
-    if (screen === 'device') {
-      return (
-        <DeviceDetailPage
-          device={selectedDevice}
-          week={week}
-          loading={DEMO.loading}
-          error={DEMO.error}
-          onSelectDose={setDetailDose}
-          onOpenMedication={() => setScreen('medication')}
-          onOpenHistory={() => setScreen('history')}
-          onBack={() => setScreen('devices')}
-        />
-      )
-    }
+  return (
+    <MedicationPage
+      medication={mockMedication}
+      deviceName={device?.nickname ?? ''}
+      saving={false}
+      error={null}
+      onSave={(values) => {
+        console.log('약 설정 저장:', values)
+        Toast.show({ icon: 'success', content: '저장했습니다' })
+        navigate(`/devices/${id}`)
+      }}
+      onBack={() => navigate(`/devices/${id}`)}
+    />
+  )
+}
 
-    // --- 화면 5 ---
-    if (screen === 'medication') {
-      return (
-        <MedicationPage
-          medication={DEMO.noMedication ? null : mockMedication}
-          deviceName={selectedDevice?.nickname ?? ''}
-          saving={DEMO.loading}
-          error={DEMO.formError}
-          onSave={(values) => {
-            console.log('약 설정 저장:', values)
-            Toast.show({ icon: 'success', content: '저장했습니다' })
-            setScreen('device')
-          }}
-          onBack={() => setScreen('device')}
-        />
-      )
-    }
+// DoseHistoryPage({ device, doses, loading, error, hasMore, loadingMore,
+//                   onSelectDose, onLoadMore, onBack })
+function DoseHistoryScreen() {
+  const navigate = useNavigate()
+  const { id } = useParams()
+  const device = mockDevices.find((d) => d.id === id) ?? null
+  const [detailDose, setDetailDose] = useState(null)
 
-    // --- 화면 6 ---
-    return (
+  return (
+    <>
       <DoseHistoryPage
-        device={selectedDevice}
-        doses={DEMO.noMedication ? [] : mockDoses}
-        loading={DEMO.loading}
-        error={DEMO.error}
-        hasMore={DEMO.hasMoreHistory}
+        device={device}
+        doses={mockDoses}
+        loading={false}
+        error={null}
+        hasMore={true}
         loadingMore={false}
         onSelectDose={setDetailDose}
         onLoadMore={() => Toast.show({ content: '다음 30일치를 불러올 자리' })}
-        onBack={() => setScreen('device')}
+        onBack={() => navigate(`/devices/${id}`)}
       />
-    )
-  }
+
+      <DoseDetailDialog
+        dose={detailDose}
+        visible={!!detailDose}
+        marking={false}
+        onClose={() => setDetailDose(null)}
+        onMarkTaken={() => {
+          Toast.show({ icon: 'success', content: '복용으로 기록했습니다' })
+          setDetailDose(null)
+        }}
+      />
+    </>
+  )
+}
+
+// NotificationListPage({ notifications, loading, error, onSelectNotification, onRefresh })
+function NotificationsScreen() {
+  const [readIds, setReadIds] = useState([])
+  const [detailDose, setDetailDose] = useState(null)
+
+  const notifications = mockNotifications.map((n) =>
+    readIds.includes(n.id) ? { ...n, read_at: new Date().toISOString() } : n,
+  )
+
+  return (
+    <>
+      <NotificationListPage
+        notifications={notifications}
+        loading={false}
+        error={null}
+        onRefresh={() => {}}
+        onSelectNotification={(n) => {
+          // 탭 한 번에 두 가지: 읽음 처리 + 공용 팝업 (spec §5 화면 7)
+          setReadIds((prev) => (prev.includes(n.id) ? prev : [...prev, n.id]))
+          const dose = ALL_DOSES.find((d) => d.id === n.dose_id)
+          if (dose) setDetailDose(dose)
+        }}
+      />
+
+      <DoseDetailDialog
+        dose={detailDose}
+        visible={!!detailDose}
+        marking={false}
+        onClose={() => setDetailDose(null)}
+        onMarkTaken={() => {
+          Toast.show({ icon: 'success', content: '복용으로 기록했습니다' })
+          setDetailDose(null)
+        }}
+      />
+    </>
+  )
+}
+
+// TabBarLayout({ activeKey, unreadCount, onChange, children })
+function TabLayout() {
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  const activeKey = location.pathname.startsWith('/notifications')
+    ? 'notifications'
+    : 'devices'
+
+  // Ⓑ 단계에서 API 응답의 unread_count 로 바뀐다
+  const unreadCount = mockNotifications.filter((n) => !n.read_at).length
+
+  return (
+    <TabBarLayout
+      activeKey={activeKey}
+      unreadCount={unreadCount}
+      onChange={(key) => navigate(key === 'devices' ? '/devices' : '/notifications')}
+    >
+      <Outlet />
+    </TabBarLayout>
+  )
+}
+
+
+
+/** 알림에서 복약 건을 찾을 때 쓰는 표 (화면 7 → 공용 팝업) */
+const ALL_DOSES = [...mockWeek, ...mockDoses]
+
+export default function App() {
+  // const [screen, setScreen] = useState('login')
+  // const [selectedDeviceId, setSelectedDeviceId] = useState(null)
+
+  // // 공용 팝업이 보여줄 복약 건. null 이면 팝업이 닫혀 있다.
+  // // 화면 4·6·7 이 모두 이 상태 하나를 쓴다. (spec §5 공용 팝업)
+  // const [detailDose, setDetailDose] = useState(null)
+
+  // // 목업이 상수라 읽음 처리를 흉내내기 위한 임시 상태.
+  // // 데이터 연결 단계에서 POST /api/notifications/:id/read 로 대체된다.
+  // const [readIds, setReadIds] = useState([])
+
+  // const devices = DEMO.empty ? [] : mockDevices
+  // const selectedDevice = devices.find((d) => d.id === selectedDeviceId) ?? null
+  // const week = DEMO.noMedication ? [] : mockWeek
+
+  // const notifications = DEMO.noNotifications
+  //   ? []
+  //   : mockNotifications.map((n) =>
+  //       readIds.includes(n.id) ? { ...n, read_at: new Date().toISOString() } : n,
+  //     )
+  // const unreadCount = notifications.filter((n) => !n.read_at).length
+
+  // 화면 1은 팝업이 필요없으므로 따로 뺀다
+  return (
+    <Routes>
+      <Route path="/" element={<Navigate to="/login" replace/>}/>
+      {/* replace는 "/"주소로 접속시 히스토리에 "/login"으로 기록하라는뜻, 이걸 사용하지않으면 history에 /,/login둘 다 남음 */}
+      <Route path="/login" element={<LoginScreen/>} />
+
+
+
+      {/* 하단 탭이 있는 화면만 path없는 레이아웃 전용 Route로 감싸기*/}
+      <Route element={<TabLayout/>}>
+        <Route path="/devices" element={<DeviceListScreen/>} />{/*홈*/}
+        <Route path="/notifications" element={<NotificationsScreen />} />{/*알림목록*/}
+      </Route>
+
+
+
+      <Route path="/devices/new" element={<DeviceRegisterScreen />} />{/*기기등록*/}
+      <Route path="/devices/:id" element={<DeviceDetailScreen />} />{/*기기상세*/}
+      <Route path="/devices/:id/medications" element={<MedicationScreen />} />{/*약설정*/}
+      <Route path="/devices/:id/history" element={<DoseHistoryScreen />} />{/*복약기록*/}
+      {/*팝업(DoseDetailDialog)은 기기상세,복약기록,알림목록 각 페이지에 배치 */}
+    </Routes>
+  )
 }
