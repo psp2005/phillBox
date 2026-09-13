@@ -28,14 +28,25 @@ import {
 
 
 
+
+
+/*
+안드로이드 백버튼 이슈는 "돌아올 이유 있는 경우만 history에 쌓는다"는 방향으로 해결
+1.안으로 들어가는 경우 - history에 쌓기
+2.뒤로가기 - nigate(-1) 
+3. 로그인/등록완료...등 완료하기 작업 - {replace : true}
+4.기기목록/알림목록 단순 하단 탭 전환 - - {replace : true}
+*/
+
+
 function LoginScreen(){
     const navigate = useNavigate()
     return(
       <LoginPage
         loading={false}
         error={null}
-        onLogin={() => navigate('/devices')}
-        onSignup={() => navigate('/devices')}
+        onLogin={() => navigate('/devices', {replace: true})}
+        onSignup={() => navigate('/devices', {replace: true})}
       />
     )
   }
@@ -50,7 +61,7 @@ function DeviceListScreen(){
       onSelectDevice={(id) => navigate(`/devices/${id}`)}
       onAddDevice={() => navigate('/devices/new')}
       onRefresh={() => {}}
-      onLogout={() => navigate('/login')}
+      onLogout={() => navigate('/login', {replace: true})}
     />
   )
 }
@@ -65,9 +76,9 @@ function DeviceRegisterScreen() {
       onSubmit={(values) => {
         console.log('등록 요청:', values)
         Toast.show({ icon: 'success', content: '기기를 등록했습니다' })
-        navigate('/devices')
+        navigate('/devices', {replace: true})
       }}
-      onCancel={() => navigate('/devices')}
+      onCancel={() => navigate(-1)}
     />
   )
 }
@@ -90,7 +101,7 @@ function DeviceDetailScreen() {
         onSelectDose={setDetailDose}
         onOpenMedication={() => navigate(`/devices/${id}/medications`)}
         onOpenHistory={() => navigate(`/devices/${id}/history`)}
-        onBack={() => navigate('/devices')}
+        onBack={() => navigate(-1)}
       />
 
       <DoseDetailDialog
@@ -123,9 +134,9 @@ function MedicationScreen() {
       onSave={(values) => {
         console.log('약 설정 저장:', values)
         Toast.show({ icon: 'success', content: '저장했습니다' })
-        navigate(`/devices/${id}`)
+        navigate(`/devices/${id}`, {replace: true})
       }}
-      onBack={() => navigate(`/devices/${id}`)}
+      onBack={() => navigate(-1)}
     />
   )
 }
@@ -149,7 +160,7 @@ function DoseHistoryScreen() {
         loadingMore={false}
         onSelectDose={setDetailDose}
         onLoadMore={() => Toast.show({ content: '다음 30일치를 불러올 자리' })}
-        onBack={() => navigate(`/devices/${id}`)}
+        onBack={() => navigate(-1)}
       />
 
       <DoseDetailDialog
@@ -220,7 +231,8 @@ function TabLayout() {
     <TabBarLayout
       activeKey={activeKey}
       unreadCount={unreadCount}
-      onChange={(key) => navigate(key === 'devices' ? '/devices' : '/notifications')}
+      onChange={(key) => navigate(key === 'devices' ? '/devices' : '/notifications', {replace: true})}
+      //기기목록,알림목록 화면전환시에는 뒤로가기에도 반응하지 않게 hitory에 기록되지 않게 replace적용
     >
       <Outlet />
     </TabBarLayout>
