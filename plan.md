@@ -274,11 +274,19 @@ Swagger(`swagger-jsdoc` + `swagger-ui-express`)는 **API 하나 만들 때마다
 프론트   Supabase Auth 로그인/회원가입 (화면 1)
          토큰을 요청 헤더에 실어 보내기
          토큰 저장 위치 결정            ← 책에서 건너뛴 부분(쿠키/세션)
+         로그인 상태 유지 + 보호된 라우트  ← 아래 참고
 
 서버     DEV_USER_ID 하드코딩 제거
          토큰을 검증해 user_id 를 꺼내는 미들웨어
          → §8.5 접근 제어가 진짜로 작동
 ```
+
+**로그인 상태 유지 + 보호된 라우트** (2026-09-13에 사용자가 발견한 증상)
+
+지금은 로그인이 화면 이동뿐이라 **앱을 껐다 켜면 다시 `/login` 부터** 시작하고, `/devices` 를 주소창에 직접 쳐도 그냥 들어가진다. Ⓒ에서 둘 다 해결한다.
+
+- **상태 유지** — Supabase Auth 라이브러리가 토큰을 `localStorage`(브라우저가 사이트별로 주는 보관함)에 저장한다. 앱 시작 시 세션을 확인해 **있으면 `/devices`, 없으면 `/login`** 으로 보낸다. Access Token(1시간)이 만료돼도 Refresh Token으로 **라이브러리가 뒤에서 갱신**하므로 몇 주간 로그인이 유지된다
+- **보호된 라우트** — `path` 없는 부모 라우트(`<Route element={<RequireAuth />}>`)로 로그인 필요 화면들을 감싼다. 세션이 있으면 `<Outlet />`, 없으면 `<Navigate to="/login" replace />`. **Ⓐ-3단계의 `TabLayout` 과 같은 구조**이고, 서버의 `requireMyDevice` 와 같은 발상이다 — 통과 여부를 한 곳에서 판단한다
 
 **서버 쪽은 생각보다 작다.** `DEV_USER_ID` 를 쓰는 자리가 `devices.js`·`notifications.js`·`user_devices.js` 세 곳뿐이라, **미들웨어 하나로 `req.userId` 를 채우면** 끝난다.
 
