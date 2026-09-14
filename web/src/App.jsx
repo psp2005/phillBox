@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import {Routes, Route, Navigate, useNavigate, useParams, useLocation, Outlet} from 'react-router'
-import { Toast } from 'antd-mobile'
 import DeviceDetailScreen from './screens/DeviceDetailScreen.jsx'
 import DeviceListScreen from './screens/DeviceListScreen.jsx'
 import DeviceRegisterScreen from './screens/DeviceRegisterScreen.jsx'
@@ -28,7 +27,7 @@ import {
 
 
 /*
-/web/src/screes속 파일들
+/web/src/screens속 파일들
 
 안드로이드 백버튼 이슈는 "돌아올 이유 있는 경우만 history에 쌓는다"는 방향으로 해결
 1.배너 탭/약설정/기기등록...등 안으로 들어가는 작업 - history에 쌓기
@@ -38,10 +37,6 @@ import {
 
 
 
-
-
-/** 알림에서 복약 건을 찾을 때 쓰는 표 (화면 7 → 공용 팝업) */
-const ALL_DOSES = [...mockWeek, ...mockDoses]
 
 export default function App() {
   // const [screen, setScreen] = useState('login')
@@ -72,7 +67,6 @@ export default function App() {
       <Route path="/" element={<Navigate to="/login" replace/>}/>
       {/* replace는 "/"주소로 접속시 히스토리에 "/login"으로 기록하라는뜻, 이걸 사용하지않으면 history에 /,/login둘 다 남음 */}
       <Route path="/login" element={<LoginScreen/>} />
-
 
 
       {/* 하단 탭이 있는 화면만 path없는 레이아웃 전용 Route로 감싸기*/}

@@ -1,4 +1,5 @@
 import express from 'express'
+import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
 import { swaggerSpec } from './swagger.js'
 import devicesRouter from './routes/devices.js'
@@ -10,6 +11,15 @@ import userDevicesRouter from './routes/user_devices.js'
 const app = express()
 const PORT = process.env.PORT || 3000 //우리가 배포할 Render 에서는 여러 사람의 앱이 돌아가기 때문에 process.env 환경변수에 Render가 정해준 포트번호가 저장된다
 //위 process는  Node.js가 자동으로 주는 객체, 지금 돌아가는 이 프로그램
+
+// 브라우저가 다른 출처(포트·도메인이 다른 곳)의 응답을 읽게 허락할 출처 목록 - cors해결
+app.use(cors({
+  origin: [
+    'http://localhost:5173',        // 로컬 개발 (npm run dev)
+    'https://phill-box.vercel.app', // 배포본
+  ],
+}))
+
 
 app.use(express.json())
 // put과post요청은 url주소에 모든 정보를 넣는get요청과 다르게 body(본문)에 실어보내는데, 
