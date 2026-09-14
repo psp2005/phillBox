@@ -60,17 +60,31 @@ export default function DoseHistoryPage({
       )
     }
 
+    // 최근 30일이 비어도 그 이전 기록이 있으면 [더 보기]를 보여준다
+    // (기기를 한동안 안 쓴 경우 — 여기서 버튼이 없으면 이전 기록을 볼 길이 없다)
     if (doses.length === 0) {
       return (
         <div className={styles.stateBox}>
           <ErrorBlock
             status="empty"
-            title="복약 기록이 없습니다"
-            description="복약 시각이 지나면 여기에 하나씩 쌓입니다."
+            title={hasMore ? '최근 30일 기록이 없습니다' : '복약 기록이 없습니다'}
+            description={
+              hasMore
+                ? '이전 기록을 보려면 [더 보기]를 눌러 주세요.'
+                : '복약 시각이 지나면 여기에 하나씩 쌓입니다.'
+            }
           />
+          {hasMore && (
+            <div className={styles.more}>
+              <Button fill="outline" loading={loadingMore} onClick={onLoadMore}>
+                더 보기
+              </Button>
+            </div>
+          )}
         </div>
       )
     }
+
 
     return (
       <>

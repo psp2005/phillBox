@@ -95,6 +95,18 @@ export function weekDateKeys(anyIsoInWeek) {
   })
 }
 
+
+/**
+ * "2026-09-14" 에서 n일 옮긴 날짜. 빼려면 음수.
+ * shiftDateKey('2026-09-14', -29) → "2026-08-16"
+ */
+export function shiftDateKey(dateKey, n) {
+  const d = new Date(`${dateKey}T00:00:00Z`)
+  d.setUTCDate(d.getUTCDate() + n)
+  return d.toISOString().slice(0, 10)
+}
+
+
 /** "2026-08-10" -> 10 (주간 현황 칸에 찍을 날짜 숫자) */
 export function dayNumber(dateKey) {
   return Number(dateKey.slice(8, 10))
