@@ -1,4 +1,4 @@
-import { Button, Form, Input, NavBar, Picker, Selector } from 'antd-mobile'
+import { Button, ErrorBlock, Form, Input, NavBar, Picker, Selector, Skeleton } from 'antd-mobile'
 import styles from './MedicationPage.module.css'
 
 /**
@@ -41,21 +41,53 @@ function timeToColumns(time) {
 }
 
 /**
- * @param {object|null} medication  GET /api/devices/:id/medication 응답. 없으면 빈 폼
+ * @param {object|null} medication  GET /api/devices/:id/medications 의 medications[0]. 미설정이면 null → 빈 폼
  * @param {string} deviceName       헤더에 보여줄 기기 별명
+ * @param {boolean} loading         불러오는 중 — 이때는 폼을 그리지 않는다 (아래 주석)
+ * @param {string} loadError        불러오기 실패 — 폼 대신 오류를 보여준다
  * @param {boolean} saving
- * @param {string} error
+ * @param {string} error            저장 실패 — 폼은 그대로 두고 위에 문구
  * @param {(v: {name, dosage, time, days}) => void} onSave
  * @param {() => void} onBack
  */
+
 export default function MedicationPage({
   medication = null,
   deviceName = '',
+  loading = false,
+  loadError = null,
   saving = false,
   error = null,
   onSave,
   onBack,
-}) {
+}) 
+{
+  // Form 은 initialValues 를 "처음 화면에 붙을 때" 한 번만 읽는다 (rc-field-form).
+  // 데이터가 오기 전에 폼을 그려버리면 나중에 도착한 값이 입력칸에 안 들어가므로,
+  // 불러오는 동안과 실패했을 때는 폼 자체를 그리지 않는다.
+  if (loading) {
+    return (
+      <div className={styles.page}>
+        <NavBar onBack={onBack}>약 설정</NavBar>
+        <div className={styles.skeletonBox}>
+          <Skeleton.Paragraph lineCount={6} animated />
+        </div>
+      </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <div className={styles.page}>
+        <NavBar onBack={onBack}>약 설정</NavBar>
+        <div className={styles.stateBox}>
+          <ErrorBlock status="default" title="불러오지 못했습니다" description={loadError} />
+        </div>
+      </div>
+    )
+  }
+
+
   const initialValues = {
     name: medication?.name ?? '',
     dosage: medication?.dosage ?? '',

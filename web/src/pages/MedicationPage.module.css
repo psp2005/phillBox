@@ -54,3 +54,14 @@
   color: var(--adm-color-weak);
   line-height: 1.6;
 }
+
+/* 불러오는 중 — 폼 대신 뼈대 */
+.skeletonBox {
+  padding: 16px;
+}
+
+/* 불러오기 실패 — 폼 대신 오류 (DeviceDetailPage 의 stateBox 와 같은 모양) */
+.stateBox {
+  padding: 48px 24px;
+  text-align: center;
+}
