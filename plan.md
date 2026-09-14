@@ -268,6 +268,16 @@ Swagger(`swagger-jsdoc` + `swagger-ui-express`)는 **API 하나 만들 때마다
 - **상태 관리(화면별 `useState` vs Zustand)는 1번을 붙여본 뒤 정한다.** 실제로 해보면 뭐가 필요한지 보인다
 - 화면에 **로딩·오류 상태는 이미 구현돼 있다**(`DEMO.loading` / `DEMO.error` 자리). 진짜 상태로 갈아끼우면 된다
 
+**진행 기록**
+
+- ✅ **준비 1·2·3 + 순서 1(기기 목록) 완료 (2026-09-14)** — 로컬·배포본 둘 다 진짜 DB 데이터로 카드가 뜬다
+  - `App.jsx` 의 껍데기들을 `web/src/screens/` 8개 파일로 분할. `~Screen`(데이터·이동) → `~Page`(그리기만) 구조 유지
+  - `web/src/lib/api.js` — `api(path, { method, body })`. 연결 실패/`!res.ok` 를 `Error` 로 던지고 `status`·`code`·`type` 을 붙인다
+  - **응답 모양 불일치**: 서버는 `devices` 와 `today_doses` 를 따로 주고 Page 는 `device.today` 를 기대 → **Screen 에서 `map` + `find` 로 합친다**. 오늘 건이 없으면 `null` → StatusChip 이 "기록 없음"
+  - **CORS**: 서버 `index.js` 에 `cors({ origin: ['http://localhost:5173', 'https://phill-box.vercel.app'] })`. 에러에 `304` 가 찍혔다 = **요청은 서버에 도착했고 브라우저가 응답을 버린 것**
+  - **Vercel `VITE_API_URL`** = Render 주소 (Type **Config**, 끝에 `/` 없음) + **Redeploy**. 넣기 전에 push 하면 배포본은 `undefined/api/devices` 로 요청해 깨진다
+- ⏳ **알림 배지는 아직 목업** — `TabLayout.jsx` 가 `mockNotifications` 로 센다(화면엔 2, 서버 `unread_count` 는 1). 순서 5(알림)에서 연결
+
 #### Ⓒ 인증
 
 ```

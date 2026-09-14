@@ -5,7 +5,6 @@ import {
   formatPhone,
   toDateKey,
   todayKey,
-  weekDateKeys,
 } from '../lib/format.js'
 import styles from './DeviceDetailPage.module.css'
 
@@ -31,7 +30,9 @@ const LEGEND = [
  * 날짜 7칸을 먼저 그리고 해당 날짜의 복약 건을 찾아 끼운다.
  *
  * @param {object} device   기기 (별명, 일련번호, patient_phone)
- * @param {Array}  week     GET /api/devices/:id/week 응답
+  * @param {Array}  week     GET /api/devices/:id/doses 의 doses (7개가 아닐 수 있다)
+ * @param {string[]} dateKeys  이번 주 월~일 "2026-09-14" 7개 — Screen 이 요청한 from~to
+ * @param {boolean} hasMedication  약 설정이 있는가 (medications.length > 0)
  * @param {boolean} loading
  * @param {string}  error
  * @param {(dose: object) => void} onSelectDose  칸 탭 → 공용 팝업
@@ -42,6 +43,8 @@ const LEGEND = [
 export default function DeviceDetailPage({
   device,
   week = [],
+  dateKeys = [],
+  hasMedication = false,
   loading = false,
   error = null,
   onSelectDose,
@@ -75,7 +78,7 @@ export default function DeviceDetailPage({
     }
 
     // 약을 아직 설정하지 않은 기기 — 주간에 그릴 게 없다
-    if (week.length === 0) {
+    if (!hasMedication) {
       return (
         <div className={styles.stateBox}>
           <ErrorBlock
@@ -93,7 +96,6 @@ export default function DeviceDetailPage({
     }
 
     // 이번 주 월~일 날짜 7개를 만들고, 각 날짜에 해당하는 복약 건을 찾아 끼운다
-    const dateKeys = weekDateKeys(week[0].scheduled_at)
     const today = todayKey()
     const slots = dateKeys.map((key) => ({
       key,

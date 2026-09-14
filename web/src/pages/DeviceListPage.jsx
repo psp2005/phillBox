@@ -66,7 +66,6 @@ export default function DeviceListPage({
       )
     }
   
-
     // 2) 오류
     if (error) {
       return (
