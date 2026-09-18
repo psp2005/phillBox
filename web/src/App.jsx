@@ -74,6 +74,13 @@ export default function App() {
         <Route path="/devices" element={<DeviceListScreen/>} />{/*홈*/}
         <Route path="/notifications" element={<NotificationsScreen />} />{/*알림목록*/}
       </Route>
+      {/* 
+        바깥 Route에는 path가 없다
+        path가 없으니 이 라우트에 해당하는 주소도 없다 즉 TabLayout만 단독으로 뜨는 주소는 존재하지 않는다
+        대신 안쪽에 적힌 두 주소(/devices, /notifications)일 때, 그 화면을 TabLayout으로 감싸라는 뜻
+        이런 식으로 Route 안에 Route를 넣은 것을 중첩 라우트라고 함 
+      */}
+
 
 
       {/* 파고 들어가는 화면 (3, 4, 5, 6) — 탭 없음 */}

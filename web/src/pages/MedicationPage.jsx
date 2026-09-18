@@ -87,7 +87,6 @@ export default function MedicationPage({
     )
   }
 
-
   const initialValues = {
     name: medication?.name ?? '',
     dosage: medication?.dosage ?? '',

@@ -5,6 +5,8 @@ import DoseHistoryPage from '../pages/DoseHistoryPage.jsx'
 import DoseDetailDialog from '../components/DoseDetailDialog.jsx'
 import { api } from '../lib/api.js'
 import { shiftDateKey, todayKey } from '../lib/format.js'
+import { markDoseTaken } from '../lib/doses.js'
+
 
 // 한 번에 불러오는 기간 (spec §5 화면 6 — 최근 30일, 더 필요하면 [더 보기])
 const RANGE_DAYS = 30
@@ -21,6 +23,7 @@ export default function DoseHistoryScreen() {
   const [loading, setLoading] = useState(true)
   const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState(null)
+    const [marking, setMarking] = useState(false) // 수동 복용 처리 요청 중
   const [detailDose, setDetailDose] = useState(null)
 
   // 처음 열 때 — 오늘 포함 최근 30일
@@ -67,6 +70,20 @@ export default function DoseHistoryScreen() {
     }
   }
 
+  // 공용 팝업 [먹었어요로 표시]
+  async function markTaken() {
+    setMarking(true)
+    try {
+      const updated = await markDoseTaken(detailDose)
+      setDoses((prev) => prev.map((d) => (d.id === updated.id ? updated : d)))
+      setDetailDose(null)
+      Toast.show({ icon: 'success', content: '복용으로 기록했습니다' })
+    } catch (err) {
+      Toast.show({ icon: 'fail', content: err.message })
+    } finally {
+      setMarking(false)
+    }
+  }
 
   useEffect(() => {
     load()
@@ -89,12 +106,9 @@ export default function DoseHistoryScreen() {
       <DoseDetailDialog
         dose={detailDose}
         visible={!!detailDose}
-        marking={false}
+        marking={marking}
         onClose={() => setDetailDose(null)}
-        onMarkTaken={() => {
-          Toast.show({ icon: 'success', content: '복용으로 기록했습니다' })
-          setDetailDose(null)
-        }}
+        onMarkTaken={markTaken}
       />
     </>
   )

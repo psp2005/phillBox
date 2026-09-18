@@ -1,5 +1,5 @@
 import {useEffect, useState} from 'react'
-import { useNavigate } from 'react-router'
+import { useNavigate, useOutletContext } from 'react-router'
 import DeviceListPage from '../pages/DeviceListPage.jsx'
 import {api} from '../lib/api.js'
 
@@ -7,6 +7,7 @@ import {api} from '../lib/api.js'
 export default function DeviceListScreen() {
 
   const navigate = useNavigate()
+  const { setUnreadCount } = useOutletContext() // 부모 TabLayout 이 건넨 배지 갱신 함수
   const [devices, setDevices] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -22,6 +23,7 @@ export default function DeviceListScreen() {
         today: data.today_doses.find((dose) => dose.device_id === device.id) ?? null,
       }))
       setDevices(merged)
+      setUnreadCount(data.unread_count)
     } catch (err) {
       setError(err.message)
     } finally {

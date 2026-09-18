@@ -111,7 +111,7 @@ export default function DoseDetailDialog({
           닫기
         </Button>
         <Button color="primary" loading={marking} onClick={confirmMarkTaken}>
-          먹었어요로 표시
+          복약처리
         </Button>
       </div>
     )

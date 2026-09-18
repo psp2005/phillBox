@@ -1,18 +1,23 @@
+import {useState} from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import TabBarLayout from '../components/TabBarLayout.jsx'
-import { mockNotifications } from '../mocks/data.js'
+// import { mockNotifications } from '../mocks/data.js'
 
 // TabBarLayout({ activeKey, unreadCount, onChange, children })
 export default function TabLayout() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const activeKey = location.pathname.startsWith('/notifications')
-    ? 'notifications'
-    : 'devices'
+  // 배지 숫자. 여기서 안불러오고, app.jsx에서 
+  //tabLayout의 자식인 device/notification각 페이지에서 GET으로 unread_count불러옴(배지 숫자)
+  //setUnreadCount를 Outlet의 context라는 프롭을 통 device/notification에전달하여 unreadCount를 직접 수정할 수 있게해야함
+  const [unreadCount, setUnreadCount] = useState(0)
 
-  // Ⓑ 단계에서 API 응답의 unread_count 로 바뀐다
-  const unreadCount = mockNotifications.filter((n) => !n.read_at).length
+  const activeKey = location.pathname.startsWith('/devices')
+    ? 'devices' : 'notifications'
+
+  //  API 대신 목데이터
+  // const unreadCount = mockNotifications.filter((n) => !n.read_at).length
 
   return (
     <TabBarLayout
@@ -23,7 +28,7 @@ export default function TabLayout() {
         navigate(key === 'devices' ? '/devices' : '/notifications', { replace: true })
       }
     >
-      <Outlet />
+      <Outlet context={{ setUnreadCount }}/>
     </TabBarLayout>
   )
 }

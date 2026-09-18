@@ -4,6 +4,7 @@ import { Toast } from 'antd-mobile'
 import DeviceDetailPage from '../pages/DeviceDetailPage.jsx'
 import DoseDetailDialog from '../components/DoseDetailDialog.jsx'
 import { api } from '../lib/api.js'
+import { markDoseTaken } from '../lib/doses.js'
 import { weekDateKeys } from '../lib/format.js'
 
 // import { mockDevices, mockWeek } from '../mocks/data.js'
@@ -19,6 +20,8 @@ export default function DeviceDetailScreen() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [detailDose, setDetailDose] = useState(null)
+  const [marking, setMarking] = useState(false) // 수동 복용 처리 요청 중
+
 
   // 오늘(KST)이 속한 주의 월~일 날짜 7개 — 요청 기간(from~to)이자 화면의 7칸
   const dateKeys = weekDateKeys(new Date().toISOString())
@@ -38,6 +41,24 @@ export default function DeviceDetailScreen() {
       setLoading(false)
     }
   }
+
+  // 공용 팝업 [먹었어요로 표시]
+  async function markTaken() {
+    setMarking(true)
+    try {
+      const updated = await markDoseTaken(detailDose)
+      // 바뀐 한 건만 갈아끼운다 (목록 전체를 다시 안 불러온다 — spec §8.2 8번)
+      setWeek((prev) => prev.map((d) => (d.id === updated.id ? updated : d)))
+      setDetailDose(null)
+      Toast.show({ icon: 'success', content: '복용으로 기록했습니다' })
+    } catch (err) {
+      // 실패하면 팝업을 닫지 않는다 — 사용자가 다시 시도할 수 있게
+      Toast.show({ icon: 'fail', content: err.message })
+    } finally {
+      setMarking(false)
+    }
+  }
+
 
   useEffect(() => {
     load()
@@ -62,12 +83,9 @@ export default function DeviceDetailScreen() {
       <DoseDetailDialog
         dose={detailDose}
         visible={!!detailDose}
-        marking={false}
+        marking={marking}
         onClose={() => setDetailDose(null)}
-        onMarkTaken={() => {
-          Toast.show({ icon: 'success', content: '복용으로 기록했습니다' })
-          setDetailDose(null)
-        }}
+        onMarkTaken={markTaken}
       />
     </>
   )
