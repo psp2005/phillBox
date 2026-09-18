@@ -57,6 +57,12 @@
   background: var(--adm-color-fill-content);
 }
 
+/* 복용 요일이 아니라 누를 수 없는 칸 — 눌리는 칸과 구분되게 흐리게 */
+.cell:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
 /* 오늘 칸은 옅은 배경으로 구분 */
 .today {
   background: var(--adm-color-primary-light, #e8f3ff);

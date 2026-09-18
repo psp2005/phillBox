@@ -68,6 +68,12 @@ export function isToday(iso) {
   return toDateKey(iso) === toDateKey(new Date().toISOString())
 }
 
+/** KST 기준 요일 번호 (0=일 ~ 6=토). medications.days 와 같은 번호 체계 */
+export function weekdayNumber(iso) {
+  return WEEKDAYS.indexOf(weekdayLabel(iso))
+}
+
+
 /** 월요일을 0으로 두는 요일 번호 (화면 4의 월~일 7칸 배치용) */
 export function mondayFirstIndex(iso) {
   const label = weekdayLabel(iso)

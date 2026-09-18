@@ -45,6 +45,7 @@ export default function DeviceDetailPage({
   week = [],
   dateKeys = [],
   hasMedication = false,
+  plannedDoseOf,
   loading = false,
   error = null,
   onSelectDose,
@@ -97,11 +98,12 @@ export default function DeviceDetailPage({
 
     // 이번 주 월~일 날짜 7개를 만들고, 각 날짜에 해당하는 복약 건을 찾아 끼운다
     const today = todayKey()
-    const slots = dateKeys.map((key) => ({
-      key,
-      dose: week.find((d) => toDateKey(d.scheduled_at) === key) ?? null,
-    }))
-
+    
+    const slots = dateKeys.map((key) => {
+      const dose = week.find((d) => toDateKey(d.scheduled_at) === key) ?? null
+      // 기록이 없는 날도 복용 요일이면 탭할 수 있다 — 기기가 꺼져 있던 날의 수동 체크 (spec §10)
+      return { key, dose, planned: dose ? null : (plannedDoseOf?.(key) ?? null) }
+    })
     return (
       <>
         <div className={styles.card}>
@@ -116,13 +118,14 @@ export default function DeviceDetailPage({
             {slots.map((slot, i) => {
               const status = resolveDoseStatus(slot.dose)
               const isToday = slot.key === today
+              const target = slot.dose ?? slot.planned // 탭했을 때 팝업에 넘길 건
               return (
                 <button
                   key={slot.key}
                   type="button"
                   className={`${styles.cell} ${isToday ? styles.today : ''}`}
-                  disabled={!slot.dose}
-                  onClick={() => slot.dose && onSelectDose?.(slot.dose)}
+                  disabled={!target}
+                  onClick={() => target && onSelectDose?.(target)}
                   aria-label={`${dayNumber(slot.key)}일 ${status.label}`}
                 >
                   <span className={styles.weekday}>{WEEKDAY_LABELS[i]}</span>
