@@ -5,6 +5,7 @@
  * 서버 주소 붙이기 · JSON 변환 · 오류 처리를 여기서 한 번에 한다.
  * (Ⓒ 인증 단계에서 토큰을 헤더에 붙이는 것도 여기 한 곳만 고친다)
  */
+import { supabase } from './supabase.js'
 
 const BASE_URL = import.meta.env.VITE_API_URL
 //BASE_URL은 npm run dev로 로컬에서는 express서버인 http://localhost:3000
@@ -30,11 +31,21 @@ api('/api/user-devices', { method: 'POST', body: { serial, code } })  // 본문 
 */
 
 export async function api(path, { method = 'GET', body } = {}) {
+  // 로그인 토큰을 꺼낸다 (localStorage 에서). 만료됐으면 supabase-js 가 새로 받아서 준다
+  const { data: auth } = await supabase.auth.getSession()
+  const token = auth.session?.access_token
+
+  const headers = {}
+  if (body) headers['Content-Type'] = 'application/json'
+  // 서버가 "누가 보낸 요청인지" 알 수 있게 (Ⓒ ⑤ 에서 서버가 이걸 확인한다)
+  if (token) headers.Authorization = `Bearer ${token}`
+
+
   let res
   try {
     res = await fetch(`${BASE_URL}${path}`, {
       method,
-      headers: body ? { 'Content-Type': 'application/json' } : undefined,
+      headers,
       body: body ? JSON.stringify(body) : undefined,
     })
     //네트워크로는 글자만 보낼 수 있으니 
@@ -56,6 +67,9 @@ export async function api(path, { method = 'GET', body } = {}) {
   // 그때 앱이 터지지 않고 data 가 null 이 되게함 - 예방
 
   if (!res.ok) {//상태코드가 200~299면 res.ok는 true, 그 외엔 false
+    // 401 = 토큰이 없거나 만료·위조 → 로그아웃. RequireAuth 가 알아채고 /login 으로 보낸다
+    if (res.status === 401) 
+      await supabase.auth.signOut()
     const error = new Error(data?.error?.message ?? '요청에 실패했습니다')
     error.status = res.status
     error.code = data?.error?.code
@@ -65,3 +79,5 @@ export async function api(path, { method = 'GET', body } = {}) {
 
   return data
 }
+
+
