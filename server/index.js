@@ -5,6 +5,7 @@ import { swaggerSpec } from './swagger.js'
 import devicesRouter from './routes/devices.js'
 import notificationsRouter from './routes/notifications.js'
 import userDevicesRouter from './routes/user_devices.js'
+import { requireAuth } from './auth.js'
 
 // console.log('환경변수 테스트:', process.env.TEST_VALUE)
 
@@ -36,9 +37,9 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 //swaggerUi.serve — 화면에 필요한 CSS·JS 파일들을 제공
 //swaggerUi.setup(swaggerSpec) — 우리 명세로 화면을 그림
 
-app.use('/api/devices', devicesRouter);
-app.use('/api/notifications', notificationsRouter);
-app.use('/api/user-devices', userDevicesRouter);
+app.use('/api/devices', requireAuth,devicesRouter);
+app.use('/api/notifications', requireAuth,notificationsRouter);
+app.use('/api/user-devices', requireAuth,userDevicesRouter);
 
 app.listen(PORT, ()=>{
     console.log(`서버 실행중 - http://localhost:${PORT}`)

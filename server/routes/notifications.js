@@ -4,7 +4,7 @@ import { pool } from '../db.js'
 const router = express.Router()
 
 // 7단계에서 인증을 붙이면 토큰에서 꺼낸다. 그때까지는 고정값.
-const DEV_USER_ID = '08eaec4c-cc47-4d5f-b1a0-2fdc7608cbf1'
+// const DEV_USER_ID = '08eaec4c-cc47-4d5f-b1a0-2fdc7608cbf1'
 
 // 알림 message는 DB에 저장하지 않고 type 으로부터 만든다 (spec 8.1)
 //나중에 FCM 푸시도 이 함수사용하면됨
@@ -39,7 +39,7 @@ function messageOf(type) {
  */
 router.get('/', async (req, res) => {
   try {
-    const userId = DEV_USER_ID
+    const userId = req.userId
     const limit = Number(req.query.limit) || 30
 
     // ① 내 알림 — 최신순
@@ -152,7 +152,7 @@ router.get('/', async (req, res) => {
  */
 router.post('/:id/read', async (req, res) => {
   try {
-    const userId = DEV_USER_ID
+    const userId = req.userId
     const id = req.params.id
 
     if (!/^\d+$/.test(id)) {//id가 오직 숫자인지 검사하는 정규표현식

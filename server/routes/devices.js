@@ -5,7 +5,7 @@ import {pool} from '../db.js'
 const router = express.Router()
 
 //7단계에서 인증을 붙이면 토큰에서 꺼낸다, 그때까지는 고정값
-const DEV_USER_ID = '08eaec4c-cc47-4d5f-b1a0-2fdc7608cbf1';//두 개의 복약기와 연결된 계정
+// const DEV_USER_ID = '08eaec4c-cc47-4d5f-b1a0-2fdc7608cbf1';//두 개의 복약기와 연결된 계정
 // const DEV_USER_ID = '3b72f89d-de4b-45f2-b2cf-eb0d19baa5ef'; //아무 기기랑 연결되지 않은 계정
 
 
@@ -20,7 +20,7 @@ async function requireMyDevice(req, res, next) {
          from user_devices ud
          join devices d on d.id = ud.device_id
         where ud.user_id = $1 and d.id = $2`,
-      [DEV_USER_ID, deviceId]
+      [req.userId, deviceId]
     )
 
     if (mine.rows.length === 0) {
@@ -62,7 +62,7 @@ async function requireMyDevice(req, res, next) {
 // GET /api/devices — 기기 목록 + 오늘 상태 (화면 2)
 router.get('/', async (req, res) => {
   try {
-    const userId = DEV_USER_ID
+    const userId = req.userId
     const limit = Number(req.query.limit) || 20
     const offset = Number(req.query.offset) || 0
 

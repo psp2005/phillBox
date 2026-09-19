@@ -5,7 +5,7 @@ import { fail } from '../errors.js'
 const router = express.Router()
 
 // 7단계에서 인증을 붙이면 토큰에서 꺼낸다. 그때까지는 고정값.
-const DEV_USER_ID = '08eaec4c-cc47-4d5f-b1a0-2fdc7608cbf1'
+// const DEV_USER_ID = '08eaec4c-cc47-4d5f-b1a0-2fdc7608cbf1'
 
 // 대소문자·공백·하이픈을 무시하고 찾기 위한 정규화 (spec.md §8.2 2번)
 function normalize(value) {
@@ -36,7 +36,7 @@ function normalize(value) {
  */
 router.post('/', async (req, res) => {
   try {
-    const userId = DEV_USER_ID
+    const userId = req.userId
     const { serial, code, nickname, patient_phone: patientPhone } = req.body
 
     const serialKey = normalize(serial)
