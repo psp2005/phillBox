@@ -1,4 +1,6 @@
 // console.log('API주소 : ', import.meta.env.VITE_API_URL)
+// console.log('URL:', import.meta.env.VITE_SUPABASE_URL)
+// console.log('KEY:', !!import.meta.env.VITE_SUPABASE_ANON_KEY)
 
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'

@@ -2,6 +2,7 @@ import {useEffect, useState} from 'react'
 import { useNavigate, useOutletContext } from 'react-router'
 import DeviceListPage from '../pages/DeviceListPage.jsx'
 import {api} from '../lib/api.js'
+import { supabase } from '../lib/supabase.js'
 
 // DeviceListPage({ devices, loading, error, onSelectDevice, onAddDevice, onRefresh, onLogout })
 export default function DeviceListScreen() {
@@ -31,6 +32,12 @@ export default function DeviceListScreen() {
     }
   }
 
+    // 저장함의 토큰을 지우고 로그인 화면으로 (히스토리 규칙 3 — 떠나기는 replace)
+  async function logout() {
+    await supabase.auth.signOut()
+    navigate('/login', { replace: true })
+  }
+  
   useEffect(() => {
     load()
   }, [])
@@ -43,7 +50,7 @@ export default function DeviceListScreen() {
       onSelectDevice={(id) => navigate(`/devices/${id}`)}
       onAddDevice={() => navigate('/devices/new')}
       onRefresh={load}
-      onLogout={() => navigate('/login', { replace: true })}
+      onLogout={logout}
     />
   )
 }

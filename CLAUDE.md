@@ -150,7 +150,12 @@ server/
 - `web/vercel.json` 의 rewrite 가 없으면 **배포본에서 새로고침 시 404** 가 난다 (로컬 Vite 개발 서버는 알아서 처리해줘서 안 보인다)
 - 개념 정리 문서: `docs/react-router-notes.html`
 
-**Ⓑ 진행 중 (2026-09-14)** — 준비 3개(`VITE_API_URL`·`lib/api.js`·CORS) + **화면 2(기기 목록) 연결 완료**, 배포본에서도 확인. 다음은 **화면 4(기기 상세)**. 상세 기록은 `plan.md` Ⓑ "진행 기록"
+**Ⓑ API 연결 완료 (2026-09-18)** — **화면 7장이 전부 진짜 서버·DB와 연결됐다.** 상세 기록은 `plan.md` Ⓑ "진행 기록"
+
+- **응답 모양 불일치는 Screen 에서 맞춘다** — 화면 2 는 `today_doses` 를 `device.today` 로, 화면 7 은 `devices` 에서 별명을 찾아 붙인다
+- **하단 탭 배지**는 `TabLayout` 의 state + `<Outlet context={{ setUnreadCount }} />`. 상태 관리 라이브러리는 아직 안 넣었다
+- **★ React 19 에서 antd-mobile 의 `Dialog`·`Toast` 가 안 뜬다.** `main.jsx` 의 `unstableSetRender` 등록이 그 대응이니 지우지 말 것
+- **남은 정리**: ① 오류 형식을 `fail()` 로 통일(`devices.js`·`notifications.js`) ② 서로 기다릴 필요 없는 쿼리를 `Promise.all` 로 (배포본 `/api/devices` 가 0.5~1.0초, DB 왕복이 대부분)
 
 - 껍데기는 이제 `App.jsx` 가 아니라 **`web/src/screens/~Screen.jsx`** 에 있다
 - Vercel 대시보드에 `VITE_API_URL` 이 들어가 있다. **`VITE_` 값을 바꾸면 반드시 Redeploy**

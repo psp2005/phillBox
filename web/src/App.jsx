@@ -8,6 +8,7 @@ import LoginScreen from './screens/LoginScreen.jsx'
 import MedicationScreen from './screens/MedicationScreen.jsx'
 import NotificationsScreen from './screens/NotificationsScreen.jsx'
 import TabLayout from './screens/TabLayout.jsx'
+import RequireAuth from './screens/RequireAuth.jsx'
 import {
   mockDevices,
   mockDoses,
@@ -64,31 +65,35 @@ export default function App() {
   // 화면 1은 팝업이 필요없으므로 따로 뺀다
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace/>}/>
-      {/* replace는 "/"주소로 접속시 히스토리에 "/login"으로 기록하라는뜻, 이걸 사용하지않으면 history에 /,/login둘 다 남음 */}
+      <Route path="/" element={<Navigate to="/devices" replace/>}/>
+       {/* 앱 시작 주소(PWA start_url 이 "/") → 기기 목록으로. 로그인 안 했으면 문지기(RequireAuth)가 /login 으로 보낸다 */}
       <Route path="/login" element={<LoginScreen/>} />
 
 
-      {/* 하단 탭이 있는 화면만 path없는 레이아웃 전용 Route로 감싸기*/}
-      <Route element={<TabLayout/>}>
-        <Route path="/devices" element={<DeviceListScreen/>} />{/*홈*/}
-        <Route path="/notifications" element={<NotificationsScreen />} />{/*알림목록*/}
-      </Route>
-      {/* 
-        바깥 Route에는 path가 없다
-        path가 없으니 이 라우트에 해당하는 주소도 없다 즉 TabLayout만 단독으로 뜨는 주소는 존재하지 않는다
-        대신 안쪽에 적힌 두 주소(/devices, /notifications)일 때, 그 화면을 TabLayout으로 감싸라는 뜻
-        이런 식으로 Route 안에 Route를 넣은 것을 중첩 라우트라고 함 
-      */}
+      <Route element={<RequireAuth/>}>
+        {/* 하단 탭이 있는 화면만 path없는 레이아웃 전용 Route로 감싸기*/}
+        <Route element={<TabLayout/>}>
+          <Route path="/devices" element={<DeviceListScreen/>} />{/*홈*/}
+          <Route path="/notifications" element={<NotificationsScreen />} />{/*알림목록*/}
+        </Route>
+        {/* 
+          바깥 Route에는 path가 없다
+          path가 없으니 이 라우트에 해당하는 주소도 없다 즉 TabLayout만 단독으로 뜨는 주소는 존재하지 않는다
+          대신 안쪽에 적힌 두 주소(/devices, /notifications)일 때, 그 화면을 TabLayout으로 감싸라는 뜻
+          이런 식으로 Route 안에 Route를 넣은 것을 중첩 라우트라고 함 
+        */}
+
+
+        {/* 파고 들어가는 화면 (3, 4, 5, 6) — 탭 없음 */}
+        <Route path="/devices/new" element={<DeviceRegisterScreen />} />{/*기기등록*/}
+        <Route path="/devices/:id" element={<DeviceDetailScreen />} />{/*기기상세*/}
+        <Route path="/devices/:id/medications" element={<MedicationScreen />} />{/*약설정*/}
+        <Route path="/devices/:id/history" element={<DoseHistoryScreen />} />{/*복약기록*/}
+        {/*팝업(DoseDetailDialog)은 기기상세,복약기록,알림목록 각 페이지에 배치 */}
+      </Route>          {/*← 문지기: 통과하면 <Outlet/>, 아니면 /login 으로 */}
 
 
 
-      {/* 파고 들어가는 화면 (3, 4, 5, 6) — 탭 없음 */}
-      <Route path="/devices/new" element={<DeviceRegisterScreen />} />{/*기기등록*/}
-      <Route path="/devices/:id" element={<DeviceDetailScreen />} />{/*기기상세*/}
-      <Route path="/devices/:id/medications" element={<MedicationScreen />} />{/*약설정*/}
-      <Route path="/devices/:id/history" element={<DoseHistoryScreen />} />{/*복약기록*/}
-      {/*팝업(DoseDetailDialog)은 기기상세,복약기록,알림목록 각 페이지에 배치 */}
     </Routes>
   )
 }

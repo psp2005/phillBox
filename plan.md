@@ -280,7 +280,11 @@ Swagger(`swagger-jsdoc` + `swagger-ui-express`)는 **API 하나 만들 때마다
 - ✅ **순서 3 화면 6(복약 기록) 완료 (2026-09-14)** — `format.js` 에 `shiftDateKey` 추가. 30일 단위 [더 보기]. **최근 30일이 비어도 `has_more` 면 빈 상태에 버튼**, [더 보기] 는 **빈 구간을 `do...while` 로 건너뛴다**
 - ✅ **순서 4 화면 5(약 설정) 완료 (2026-09-14)** — 첫 쓰기(PUT). **antd-mobile Form 은 `initialValues` 를 처음 붙을 때 한 번만 읽으므로**(rc-field-form `Form.js:82`·`useForm.js:87`) 불러오는 동안 폼을 그리지 않는다. 불러오기 실패(`loadError`, 폼 숨김)와 저장 실패(`error`, 폼 유지)를 prop 으로 분리
 - 📏 **응답 속도 측정 (2026-09-14)** — 배포 서버 `/api/health` 약 0.14~0.3초, `/api/devices` 약 0.42~1.0초. **DB 구간이 가장 크다** (Render 싱가포르 ↔ Supabase 서울, 쿼리를 `await` 로 차례차례). 개선 후보: A `Promise.all` 동시 조회(Ⓑ 끝나고 오류 형식 통일 때 같이) / B 프론트 캐싱(순서 5에서 상태 관리 정할 때) / C Supabase 이전(안 함)
-- ⏳ **알림 배지는 아직 목업** — `TabLayout.jsx` 가 `mockNotifications` 로 센다(화면엔 2, 서버 `unread_count` 는 1). 순서 5(알림)에서 연결
+- ✅ **순서 5 화면 7(알림) 완료 (2026-09-17)** — 배지 숫자는 **`TabLayout` 이 state 로 들고 `<Outlet context={{ setUnreadCount }} />` 로 자식에게 내려준다.** 자식(화면 2·7)이 응답의 `unread_count` 로 갱신한다. 배지 전용 API 가 없고(§8.2 1번) 숫자를 아는 쪽이 자식이라서. **Zustand 는 안 썼다** — 필요한 화면이 같은 부모 아래 둘뿐
+- ✅ **순서 7 공용 팝업 완료 (2026-09-18)** — `lib/doses.js` 의 `markDoseTaken(dose)` 를 화면 4·6·7 이 공유한다. 앱이 보내는 것은 `scheduled_at` 하나뿐이고 **`taken_at`·`taken_source='manual'` 은 서버가 정한다** (경로가 곧 증거 — 앱이 `ir`/`camera` 라고 거짓말할 수 없다)
+- ✅ **화면 4 빈 칸 탭 (2026-09-18)** — §10 에서 앞당겨 구현. 약 설정의 `days`·`time` 으로 가상 복약 건을 만들어 팝업에 넘기고, 저장은 서버가 그때 줄을 만들며 일어난다. **복용 요일 칸만** 연 이유는 취소 API 가 없어 오탭을 되돌릴 수 없기 때문
+- ✅ **순서 6 화면 3(기기 등록) 완료 (2026-09-18)** — 실패 3종(`SERIAL_NOT_FOUND`·`INVALID_CODE`·`ALREADY_REGISTERED`)이 서버 문구 그대로 폼 위에 뜬다. 실패해도 입력값을 지우지 않는다
+- 🐞 **★ React 19 + antd-mobile v5 (2026-09-18) — 원인 찾기 어려운 함정** — `Dialog.confirm`·`Toast.show` 처럼 **함수로 띄우는 부품이 조용히 아무것도 안 그렸다.** 에러도 없이 클릭만 먹통. antd-mobile 이 `react-dom` 에서 `createRoot` 를 찾는데 **React 19 가 그 자리를 없앴고**(`react-dom/client` 로 이동), 옛 `ReactDOM.render` 도 삭제돼 `?.` 호출이 조용히 무시된 것. 해결은 `main.jsx` 에서 **`unstableSetRender`** 로 React 19 방식을 알려주기 (https://mobile.ant.design/guide/v5-for-19)
 
 #### Ⓒ 인증
 
