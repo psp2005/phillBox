@@ -103,8 +103,8 @@ Node.js 책의 아래 챕터를 **의도적으로 건너뛰었다.** "책에서 
 | **1주차 — Supabase + DB 테이블 (4단계)** | ✅ **2026-08-29 완료** — 프로젝트 `pillbox`(Seoul) + 테이블 5개. SQL 원본은 `server/sql/001_init.sql` |
 | **1주차 — `server/` 최소 Express + Render 배포** | ✅ **2026-08-30 완료** — https://pillbox-server-wdjx.onrender.com/api/health → `{"ok":true}` |
 | **2주차 — 앱용 서버 API 8개 + Swagger (5단계)** | ✅ **2026-09-12 완료.** 인증 없이 `DEV_USER_ID` 하드코딩 · `/api-docs` 에서 전부 시험 가능 |
-| **3주차 — 화면 연결 + 인증 (6·7단계)** | ⏳ **지금 여기** |
-| 8 디바이스 (파이썬 + 디바이스용 API 2개) | ⬜ 4주차 |
+| **3주차 — 화면 연결 + 인증 (6·7단계)** | ✅ **2026-09-19 완료** — Ⓑ API 연결 + Ⓒ 인증, 배포본·폰 확인 |
+| 8 디바이스 (파이썬 + 디바이스용 API 2개) | ⏳ **다음** |
 
 **서버 구조 (2026-09-12)**
 
@@ -161,7 +161,14 @@ server/
 - Vercel 대시보드에 `VITE_API_URL` 이 들어가 있다. **`VITE_` 값을 바꾸면 반드시 Redeploy**
 - 서버 CORS 허용 출처는 `server/index.js` 에 하드코딩 (로컬 5173 + Vercel 주소)
 
-**아직 안 되는 것:** 앱을 껐다 켜면 로그인 화면부터 시작하고, `/devices` 를 주소창에 직접 쳐도 들어가진다. **Ⓒ(인증)에서 해결** — `plan.md` 참고.
+**Ⓒ 인증 완료 (2026-09-19)** — 로컬·배포본·폰 모두 확인. **`DEV_USER_ID` 하드코딩은 없어졌다.** 상세는 `plan.md` Ⓒ "진행 기록"
+
+- **앱**: `lib/supabase.js`(인증 전용 창구) · 로그인/가입은 Supabase 로 직접 · `RequireAuth` 문지기가 로그인 필요한 화면 전부를 감싼다 · `api.js` 가 매 요청 `Authorization: Bearer <토큰>` 을 붙이고 **401 이면 로그아웃**
+- **서버**: `server/auth.js` 의 `requireAuth` 가 토큰 도장을 확인해 `req.userId` 를 채운다. **ES256(공개키) 방식이라 서버에 비밀 값이 없다** — `SUPABASE_URL` 로 공개키 목록(`/auth/v1/.well-known/jwks.json`)만 받는다
+- **환경변수**: 서버 `SUPABASE_URL` (로컬 `.env` + Render) · 앱 `VITE_SUPABASE_URL`·`VITE_SUPABASE_ANON_KEY`(`sb_publishable_…`) (로컬 `.env.local` + Vercel)
+- **테스트 계정**: A `academy1@example.com`(기기 3대) · B `academy2@example.com`(할아버지 기기를 "아버지"로 공동 관리). 대시보드에서 **Confirm email 끔**
+- **Swagger 는 이제 앱용 API 에서 401** — 토큰 입력칸이 없다. 확인은 앱으로 한다
+- **없는 기능**: 기기 연결 해제·별명/전화번호 수정 — SQL 로만 가능
 
 **최근에 바뀐 것 (2026-08-25~26):**
 - **보호자 공동 관리를 MVP에 포함**했다 → `nickname`·`patient_phone`이 `devices`가 아니라 **`user_devices`** 컬럼이 됐다. `spec.md` §7·§8.6 참고. **§8.1 공통 객체 4개의 응답 모양은 안 바뀌었다**

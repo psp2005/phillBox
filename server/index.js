@@ -3,15 +3,19 @@ import cors from 'cors'
 import swaggerUi from 'swagger-ui-express'
 import { swaggerSpec } from './swagger.js'
 import devicesRouter from './routes/devices.js'
+import deviceRouter from './routes/device.js'
 import notificationsRouter from './routes/notifications.js'
 import userDevicesRouter from './routes/user_devices.js'
-import { requireAuth } from './auth.js'
+import { requireAuth, requireDevice } from './auth.js'
 
 // console.log('환경변수 테스트:', process.env.TEST_VALUE)
 
 const app = express()
 const PORT = process.env.PORT || 3000 //우리가 배포할 Render 에서는 여러 사람의 앱이 돌아가기 때문에 process.env 환경변수에 Render가 정해준 포트번호가 저장된다
 //위 process는  Node.js가 자동으로 주는 객체, 지금 돌아가는 이 프로그램
+
+
+
 
 // 브라우저가 다른 출처(포트·도메인이 다른 곳)의 응답을 읽게 허락할 출처 목록 - cors해결
 app.use(cors({
@@ -27,9 +31,8 @@ app.use(express.json())
 //네트워크를 통해서 잘게 쪼개져 넘어온 http속 body chunk들을 모아서 글자로 잇고, json으로 해석하는 역할
 
 
-
 app.get('/api/health', (req, res) => {
-    res.json({ ok: true })
+  res.json({ ok: true })
 })
 
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
@@ -37,9 +40,21 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec))
 //swaggerUi.serve — 화면에 필요한 CSS·JS 파일들을 제공
 //swaggerUi.setup(swaggerSpec) — 우리 명세로 화면을 그림
 
+
+//----------------앱 라우터--------------------------------//
+
 app.use('/api/devices', requireAuth,devicesRouter);
 app.use('/api/notifications', requireAuth,notificationsRouter);
 app.use('/api/user-devices', requireAuth,userDevicesRouter);
+
+
+
+
+
+//----------------기기 라우터--------------------------------//
+
+//  사람 토큰이 아니라 기기 키(X-Device-Key)로 확인
+app.use('/api/device', requireDevice, deviceRouter)
 
 app.listen(PORT, ()=>{
     console.log(`서버 실행중 - http://localhost:${PORT}`)

@@ -310,6 +310,20 @@ Swagger(`swagger-jsdoc` + `swagger-ui-express`)는 **API 하나 만들 때마다
 
 **끝났다는 판정:** 폰에서 아이콘 → 로그인 → 내 기기 목록 → 상세 → 수동 체크가 서버에 저장된다.
 
+**진행 기록 — ✅ Ⓒ 완료 (2026-09-19, 폰에서 확인)**
+
+| 단계 | 한 일 | 알아둘 것 |
+|---|---|---|
+| ① | `@supabase/supabase-js` + `lib/supabase.js` | **인증에만** 쓴다. 테이블은 여전히 Express 경유 (접근 제어를 서버 한 곳에서). 공개 키가 `sb_publishable_…` 형식 = 옛 `anon` 자리. **`VITE_SUPABASE_URL` 은 `/rest/v1/` 을 뺀 프로젝트 주소** |
+| ② | 화면 1 로그인·가입 | supabase-js 는 **throw 하지 않고 `{ data, error }` 를 돌려준다** (우리 `api()` 와 반대). 오류 문구는 `error.code` 로 한국어 매핑. 대시보드 **Confirm email 끔** (가짜 주소는 메일을 못 받는다) |
+| ③ | `RequireAuth` 문지기 + 로그인 유지 + 진짜 로그아웃 | `session` 을 **`undefined`(확인 중) / `null` / 객체** 셋으로 둬야 첫 그리기에서 `/login` 으로 잘못 튕기지 않는다. `/` → `/devices` (PWA `start_url` 이 `/`) |
+| ④ | `api.js` 가 `Authorization: Bearer <토큰>` | 헤더가 붙으면 **GET 에도 preflight(OPTIONS 204)** 가 생긴다. `cors` 가 알아서 허락 |
+| ⑤ | `server/auth.js` `requireAuth` → `req.userId` · `DEV_USER_ID` 제거 · 401 이면 앱이 로그아웃 | 공개 JWKS 를 확인해 보니 **ES256** → `jose` 의 `createRemoteJWKSet` + `jwtVerify(issuer, audience)`. **서버에 비밀 값이 필요 없다.** `cors` 가 `requireAuth` 보다 위에 있어야 preflight 가 막히지 않는다 |
+| ⑥ | B 로 A 기기 주소 직접 접근 → **403 "접근 권한이 없습니다"** · B 가 할아버지 기기를 "아버지"로 공동 등록 | **§8.5 접근 제어가 처음으로 실제로 작동한 순간.** 별명·전화번호는 사람마다, 복약 기록은 기기마다 |
+
+**배포에서 겪은 것** — 폰에서 "로그인이 필요합니다". 서버는 새 코드인데 **`api.js` 수정이 커밋에서 빠져** 배포 앱이 토큰을 안 보냈다. `npm run dev` 는 저장된 파일을 그대로 돌리지만 **배포는 커밋·push 된 것만** 쓴다. → **push 전에 `git status` 가 `working tree clean` 인지 확인**
+**배포 순서** — 대시보드 환경변수(Render `SUPABASE_URL`, Vercel `VITE_SUPABASE_*`)를 **먼저** 넣고 그다음 push. Vercel 은 `VITE_` 값을 빌드 때 박아 넣으므로 순서가 바뀌면 Redeploy 가 한 번 더 필요하다
+
 > **여기까지 되면 시연은 성공이다.** 4주차는 "더 좋게"이지 "되게"가 아니다.
 
 ---
@@ -328,6 +342,17 @@ Swagger(`swagger-jsdoc` + `swagger-ui-express`)는 **API 하나 만들 때마다
 | 3-1 | **가상 기기 여러 대를 띄울 수 있게** (2026-09-01 결정) | 아래 참고 |
 | 4 | `POST /api/device/events` 로 보고 → 폰 화면이 바뀜 | **시연의 클라이맥스** |
 | **5** | **리허설 (최소 2일 확보)** | 아래 §4 |
+
+**✅ 서버 쪽 기기용 API 2개 완료 (2026-09-20)** — `server/routes/device.js` + `auth.js` 의 `requireDevice`
+
+- **기기 인증** — 헤더 `X-Device-Key` → `devices.device_api_key` 조회 → `req.device`. 사람용 `requireAuth`(→`req.userId`)의 기기 버전. 실패는 `401 INVALID_DEVICE_KEY`
+- **경로가 한 글자 차이** — 앱용 `/api/devices`(복수) vs 기기용 `/api/device`(단수). Express 는 마디 단위로 비교해 서로 안 섞인다
+- **★ 라우터를 `express.json()` 위에 끼웠다가 고쳤다.** GET 은 멀쩡하지만 POST 의 `req.body` 가 비게 된다 → **공통 미들웨어(cors·json) 먼저, 라우터는 맨 아래**
+- **상태는 앞으로만 간다** — `STATUS_ORDER = scheduled<notified<dispensed<missed<taken` 을 `array_position` 으로 비교해 순위가 높을 때만 갱신. 늦게 도착한 보고·재전송·보호자 수동 taken 이 뒤집히지 않는다. 시각 칸은 `coalesce(기존, 새 값)` 로 첫 값 유지
+- **알림은 `insert ... select from user_devices`** — 연결된 보호자 **수만큼** 한 번에. `unique(user_id,dose_id,type)` + `do nothing` 이라 재전송돼도 안 늘어난다. 최종 상태가 `missed` 일 때만 만든다
+- **`taken_source`는 `ir`/`camera` 만 받는다.** `manual` 은 앱 경로로만 — 경로가 곧 증거
+- **트랜잭션을 안 쓴 이유** — 두 쿼리 모두 멱등이라 재전송으로 스스로 맞춰진다
+- 겪은 것: `--watch` 재시작 순간의 요청은 `curl: (56) Connection was reset` / Git Bash 붙여넣기에서 `[200~` 가 섞이면 `enable-bracketed-paste off`
 
 #### 복약기 시뮬레이터 — 가상 기기 여러 대 (2026-09-01 결정)
 
