@@ -136,6 +136,15 @@
   text-decoration: none;
 }
 
+/* 헤더 오른쪽 [연결 해제] — 되돌리려면 일련번호·등록코드가 필요하므로 눈에 띄게 하되
+   버튼처럼 크게 만들지는 않는다 (오탭 방지는 확인 창이 맡는다) */
+.navUnregister {
+  font-size: 14px;
+  color: var(--adm-color-danger);
+  cursor: pointer;
+}
+
+
 .stateBox {
   padding: 48px 24px;
   text-align: center;

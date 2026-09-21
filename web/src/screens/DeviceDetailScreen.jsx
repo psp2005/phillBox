@@ -1,6 +1,6 @@
 import { useState , useEffect} from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { Toast } from 'antd-mobile'
+import { Toast , Dialog} from 'antd-mobile'
 import DeviceDetailPage from '../pages/DeviceDetailPage.jsx'
 import DoseDetailDialog from '../components/DoseDetailDialog.jsx'
 import { api } from '../lib/api.js'
@@ -22,6 +22,7 @@ export default function DeviceDetailScreen() {
   const [error, setError] = useState(null)
   const [detailDose, setDetailDose] = useState(null)
   const [marking, setMarking] = useState(false) // 수동 복용 처리 요청 중
+  const [unregistering, setUnregistering] = useState(false) //기기 등록 해제용
   const [medication, setMedication] = useState(null) // 약 설정 — 빈 칸의 예정 시각 계산에 쓴다
 
 
@@ -87,6 +88,29 @@ export default function DeviceDetailScreen() {
     }
   }
 
+    // 기기 연결 해제 — user_devices 의 내 줄만 지운다 (기록은 남는다)
+  async function unregister() {
+    const ok = await Dialog.confirm({
+      content: '이 기기의 연결을 해제할까요?\n복약 기록은 지워지지 않고, 일련번호와 등록코드로 다시 등록할 수 있습니다.',
+      confirmText: '연결 해제',
+      cancelText: '취소',
+    })
+    if (!ok) return
+
+    setUnregistering(true)
+    try {
+      await api(`/api/user-devices/${id}`, { method: 'DELETE' })
+      Toast.show({ icon: 'success', content: '연결을 해제했습니다' })
+      // 돌아갈 이 화면이 이제 남의 기기(403)가 되므로 뒤로가기로 되돌아오지 못하게 replace
+      navigate('/devices', { replace: true })
+    } catch (err) {
+      Toast.show({ icon: 'fail', content: err.message })
+    } finally {
+      setUnregistering(false)
+    }
+  }
+
+
   useEffect(() => {
     load()
   }, [id])
@@ -105,6 +129,8 @@ export default function DeviceDetailScreen() {
         onSelectDose={setDetailDose}
         onOpenMedication={() => navigate(`/devices/${id}/medications`)}
         onOpenHistory={() => navigate(`/devices/${id}/history`)}
+        onUnregister={unregister}
+        unregistering={unregistering}
         onBack={() => navigate(-1)}
       />
 

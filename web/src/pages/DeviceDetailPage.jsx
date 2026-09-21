@@ -51,11 +51,26 @@ export default function DeviceDetailPage({
   onSelectDose,
   onOpenMedication,
   onOpenHistory,
+  onUnregister,
+  unregistering = false,
   onBack,
 }) {
   return (
     <div className={styles.page}>
-      <NavBar onBack={onBack}>{device?.nickname ?? '기기'} · 이번주</NavBar>
+      <NavBar
+        onBack={onBack}
+        right={
+          <span
+            className={styles.navUnregister}
+            onClick={unregistering ? undefined : onUnregister}
+          >
+            {unregistering ? '해제 중…' : '연결 해제'}
+          </span>
+        }
+      >
+        {device?.nickname ?? '기기'} · 이번주
+      </NavBar>
+
       {renderBody()}
     </div>
   )

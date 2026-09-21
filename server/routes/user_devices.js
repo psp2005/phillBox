@@ -66,6 +66,9 @@ router.post('/', async (req, res) => {
       return fail(res, 400, 'INVALID_CODE', '등록코드가 일치하지 않습니다')
     }
 
+
+
+
     // ③ 연결 생성 — 내가 이미 등록했으면 아무 줄도 안 생긴다
     const saved = await pool.query(
       `insert into user_devices (user_id, device_id, nickname, patient_phone)
@@ -97,6 +100,50 @@ router.post('/', async (req, res) => {
     })
   } catch (err) {
     console.error('POST /api/user-devices 실패:', err)
+    return fail(res, 500, 'SERVER_ERROR', '서버 오류')
+  }
+})
+
+
+/**
+ * @openapi
+ * /api/user-devices/{device_id}:
+ *   delete:
+ *     summary: 기기 연결 해제 (화면 4)
+ *     description: 내 연결 한 줄만 지운다. 기기·약 설정·복약 기록은 그대로 남아 재등록하면 돌아온다.
+ *     parameters:
+ *       - in: path
+ *         name: device_id
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       204: { description: 해제됨 }
+ *       404: { description: 내가 등록하지 않은 기기 }
+ */
+router.delete('/:device_id', async (req, res) => {
+  try {
+    const deviceId = req.params.device_id
+
+    // uuid 모양이 아니면 DB 에 묻기 전에 막는다 (uuid 컬럼과 비교하다 500 이 나는 것을 피함)
+    if (!/^[0-9a-f-]{36}$/i.test(deviceId)) {
+      return fail(res, 404, 'DEVICE_NOT_FOUND', '등록되지 않은 기기입니다')
+    }
+
+    // 내 줄만 지운다 → 남의 연결은 건드릴 수 없고, 공동 관리 중인 다른 보호자도 그대로다
+    const deleted = await pool.query(
+      `delete from user_devices
+        where user_id = $1 and device_id = $2`,
+      [req.userId, deviceId],
+    )
+
+    // 지워진 줄이 0개 = 원래 내 기기가 아니었다 (없는 기기인지 남의 기기인지는 구분하지 않는다)
+    if (deleted.rowCount === 0) {
+      return fail(res, 404, 'DEVICE_NOT_FOUND', '등록되지 않은 기기입니다')
+    }
+
+    res.status(204).end()
+  } catch (err) {
+    console.error('DELETE /api/user-devices/:device_id 실패:', err)
     return fail(res, 500, 'SERVER_ERROR', '서버 오류')
   }
 })
