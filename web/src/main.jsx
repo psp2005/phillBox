@@ -8,8 +8,12 @@ import { BrowserRouter } from 'react-router'//주소를 감시하는 감시자, 
 import 'antd-mobile/es/global'
 import './index.css'
 import App from './App.jsx'
-import { unstableSetRender } from 'antd-mobile'
+import { unstableSetRender, setDefaultConfig } from 'antd-mobile'
+import koKR from 'antd-mobile/es/locales/ko-KR'
 
+
+// antd-mobile 기본 언어가 중국어다. 부품 안의 문구(Picker 확인/취소, 당겨서 새로고침 …)를 한국어로
+setDefaultConfig({ locale: koKR })
 
 // antd-mobile v5 는 React 16~18 기준이라, Dialog·Toast 처럼 함수로 띄우는 부품이
 // React 19 에서 조용히 아무것도 안 그린다. 그리는 방법을 직접 알려준다.
