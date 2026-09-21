@@ -30,9 +30,11 @@ export default function DeviceDetailScreen() {
   // 오늘(KST)이 속한 주의 월~일 날짜 7개 — 요청 기간(from~to)이자 화면의 7칸
   const dateKeys = weekDateKeys(new Date().toISOString())
 
-  async function load() {
-    setLoading(true)
-    setError(null)
+  async function load({ silent = false } = {}) {
+    if (!silent) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const data = await api(`/api/devices/${id}/doses?from=${dateKeys[0]}&to=${dateKeys[6]}`)
       setDevice(data.devices[0])
@@ -40,9 +42,9 @@ export default function DeviceDetailScreen() {
       // medications 가 [] 이면 약 미설정 (spec §8.2 3번). doses 개수로 판단하지 않는다
       setMedication(data.medications[0] ?? null)
     } catch (err) {
-      setError(err.message)
+      if (!silent) setError(err.message)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
@@ -110,12 +112,14 @@ export default function DeviceDetailScreen() {
     }
   }
 
-
   useEffect(() => {
     load()
+    // 복약기 보고가 주간 칸에 바로 보이도록 (시연: ⏳ → ✕ / ✓)
+    const timer = setInterval(() => load({ silent: true }), 30000)
+    return () => clearInterval(timer)
   }, [id])
 
-
+ 
   return (
     <>
       <DeviceDetailPage

@@ -13,9 +13,13 @@ export default function DeviceListScreen() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  async function load(){
-    setLoading(true)
-    setError(null)
+
+  // silent = true 면 30초 자동 갱신 — 뼈대를 띄우지 않고 실패해도 화면을 지우지 않는다
+  async function load({ silent = false } = {}) {
+    if (!silent) {
+      setLoading(true)
+      setError(null)
+    }
     try {
       const data = await api('/api/devices')
       // 서버는 devices 와 today_doses 를 따로 준다 → Page 가 기대하는 device.today 로 합친다
@@ -26,9 +30,9 @@ export default function DeviceListScreen() {
       setDevices(merged)
       setUnreadCount(data.unread_count)
     } catch (err) {
-      setError(err.message)
+      if (!silent) setError(err.message)
     } finally {
-      setLoading(false)
+      if (!silent) setLoading(false)
     }
   }
 
@@ -37,9 +41,12 @@ export default function DeviceListScreen() {
     await supabase.auth.signOut()
     navigate('/login', { replace: true })
   }
-  
+
   useEffect(() => {
     load()
+    // 복약기가 보고하면 폰 화면이 스스로 바뀌도록 30초마다 다시 불러온다 (spec §8.2 1번)
+    const timer = setInterval(() => load({ silent: true }), 30000)
+    return () => clearInterval(timer) // 화면을 떠나면 반드시 멈춘다
   }, [])
 
   return (
